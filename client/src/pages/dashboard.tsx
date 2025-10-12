@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { BookingCard } from "@/components/BookingCard";
 import { VendorCard } from "@/components/VendorCard";
@@ -7,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Package, 
   CheckCircle, 
@@ -16,72 +19,90 @@ import {
   Plus
 } from "lucide-react";
 
-const mockBookings = [
-  {
-    id: "1",
-    customerName: "Rahul Sharma",
-    phone: "+91 98765 43210",
-    address: "123, MG Road, Bangalore",
-    items: [
-      { category: "Old AC", quantity: 2 },
-      { category: "Refrigerator", quantity: 1 }
-    ],
-    totalValue: 3500,
-    status: "pending" as const,
-    date: new Date()
-  },
-  {
-    id: "2",
-    customerName: "Priya Patel",
-    phone: "+91 98765 43211",
-    address: "456, Koramangala, Bangalore",
-    items: [
-      { category: "Paper", quantity: 50 },
-      { category: "Books", quantity: 20 }
-    ],
-    totalValue: 1200,
-    status: "assigned" as const,
-    date: new Date(Date.now() - 86400000)
-  },
-  {
-    id: "3",
-    customerName: "Amit Kumar",
-    phone: "+91 98765 43212",
-    address: "789, Indiranagar, Bangalore",
-    items: [
-      { category: "Copper", quantity: 5 },
-      { category: "Iron", quantity: 3 }
-    ],
-    totalValue: 2800,
-    status: "completed" as const,
-    date: new Date(Date.now() - 172800000)
-  }
-];
+interface BookingItem {
+  categoryName: string;
+  quantity: number;
+}
 
-const mockVendors = [
-  {
-    id: "1",
-    name: "Vikram Kabadiwala",
-    phone: "+91 99999 11111",
-    location: "Indiranagar, Bangalore"
-  },
-  {
-    id: "2",
-    name: "Suresh Scrap Services",
-    phone: "+91 99999 22222",
-    location: "Koramangala, Bangalore"
-  }
-];
+interface Booking {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  totalValue: string;
+  status: "pending" | "assigned" | "completed";
+  createdAt: string;
+  items: BookingItem[];
+}
+
+interface Vendor {
+  id: string;
+  location: string;
+  user: {
+    id: string;
+    name: string | null;
+    phoneNumber: string;
+  };
+}
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("customer");
   const { user, signOut } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const { data: currentUser } = useQuery<{ role: string }>({
+    queryKey: ["/api/users/me"],
+    enabled: !!user,
+  });
+
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
+    queryKey: ["/api/bookings"],
+    enabled: !!user,
+  });
+
+  const { data: vendors = [] } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
+    enabled: !!user && (currentUser?.role === "admin"),
+  });
+
+  const assignVendorMutation = useMutation({
+    mutationFn: async ({ bookingId, vendorId }: { bookingId: string; vendorId: string }) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/assign`, { vendorId });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      toast({
+        title: "Vendor Assigned",
+        description: "Vendor has been successfully assigned to the booking",
+      });
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      toast({
+        title: "Status Updated",
+        description: "Booking status has been updated",
+      });
+    },
+  });
 
   const handleLogout = async () => {
     await signOut();
     setLocation('/login');
   };
+
+  const customerBookings = bookings.filter(b => b.status !== "completed");
+  const completedBookings = bookings.filter(b => b.status === "completed");
+  const pendingBookings = bookings.filter(b => b.status === "pending");
+  const totalValue = completedBookings.reduce((sum, b) => sum + parseFloat(b.totalValue), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,26 +136,45 @@ export default function Dashboard() {
                 <h1 className="text-3xl font-bold font-[Poppins]">My Dashboard</h1>
                 <p className="text-muted-foreground mt-1">Track your bookings and earnings</p>
               </div>
-              <Button data-testid="button-new-booking">
+              <Button onClick={() => setLocation("/bookings/new")} data-testid="button-new-booking">
                 <Plus className="w-4 h-4 mr-2" />
                 New Booking
               </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Total Bookings" value="3" icon={Package} />
-              <StatCard title="Pending" value="1" icon={Clock} />
-              <StatCard title="Completed" value="1" icon={CheckCircle} />
-              <StatCard title="Total Earned" value="₹2,800" icon={IndianRupee} />
+              <StatCard title="Total Bookings" value={bookings.length} icon={Package} />
+              <StatCard title="Pending" value={pendingBookings.length} icon={Clock} />
+              <StatCard title="Completed" value={completedBookings.length} icon={CheckCircle} />
+              <StatCard title="Total Earned" value={`₹${totalValue.toFixed(0)}`} icon={IndianRupee} />
             </div>
 
             <div>
               <h2 className="text-2xl font-semibold mb-6">My Bookings</h2>
-              <div className="grid gap-6">
-                {mockBookings.map((booking) => (
-                  <BookingCard key={booking.id} {...booking} />
-                ))}
-              </div>
+              {bookingsLoading ? (
+                <p>Loading bookings...</p>
+              ) : bookings.length === 0 ? (
+                <p className="text-muted-foreground">No bookings yet. Create your first booking!</p>
+              ) : (
+                <div className="grid gap-6">
+                  {bookings.map((booking) => (
+                    <BookingCard 
+                      key={booking.id} 
+                      id={booking.id}
+                      customerName={booking.customerName}
+                      phone={booking.customerPhone}
+                      address={booking.customerAddress}
+                      items={booking.items.map(item => ({ 
+                        category: item.categoryName, 
+                        quantity: item.quantity 
+                      }))}
+                      totalValue={parseFloat(booking.totalValue)}
+                      status={booking.status}
+                      date={new Date(booking.createdAt)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -147,40 +187,69 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard 
                 title="Total Bookings" 
-                value="248" 
+                value={bookings.length} 
                 icon={Package}
-                trend={{ value: "12% from last month", positive: true }}
               />
-              <StatCard title="Pending" value="12" icon={Clock} />
-              <StatCard title="Completed" value="236" icon={CheckCircle} />
+              <StatCard title="Pending" value={pendingBookings.length} icon={Clock} />
+              <StatCard title="Completed" value={completedBookings.length} icon={CheckCircle} />
               <StatCard 
                 title="Total Revenue" 
-                value="₹4.2L" 
+                value={`₹${totalValue.toFixed(0)}`} 
                 icon={IndianRupee}
-                trend={{ value: "8% from last month", positive: true }}
               />
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               <div>
                 <h2 className="text-2xl font-semibold mb-6">All Bookings</h2>
-                <div className="space-y-4">
-                  {mockBookings.map((booking) => (
-                    <BookingCard key={booking.id} {...booking} />
-                  ))}
-                </div>
+                {bookingsLoading ? (
+                  <p>Loading bookings...</p>
+                ) : (
+                  <div className="space-y-4">
+                    {bookings.map((booking) => (
+                      <BookingCard 
+                        key={booking.id} 
+                        id={booking.id}
+                        customerName={booking.customerName}
+                        phone={booking.customerPhone}
+                        address={booking.customerAddress}
+                        items={booking.items.map(item => ({ 
+                          category: item.categoryName, 
+                          quantity: item.quantity 
+                        }))}
+                        totalValue={parseFloat(booking.totalValue)}
+                        status={booking.status}
+                        date={new Date(booking.createdAt)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
                 <h2 className="text-2xl font-semibold mb-6">Available Vendors</h2>
                 <div className="space-y-4">
-                  {mockVendors.map((vendor) => (
+                  {vendors.map((vendor) => (
                     <VendorCard 
                       key={vendor.id} 
-                      {...vendor}
-                      onAssign={() => console.log(`Assigning vendor ${vendor.id}`)}
+                      id={vendor.id}
+                      name={vendor.user.name || vendor.user.phoneNumber}
+                      phone={vendor.user.phoneNumber}
+                      location={vendor.location}
+                      onAssign={() => {
+                        const pendingBooking = pendingBookings[0];
+                        if (pendingBooking) {
+                          assignVendorMutation.mutate({ 
+                            bookingId: pendingBooking.id, 
+                            vendorId: vendor.id 
+                          });
+                        }
+                      }}
                     />
                   ))}
+                  {vendors.length === 0 && (
+                    <p className="text-muted-foreground">No vendors available</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -193,17 +262,40 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard title="Assigned Pickups" value="5" icon={Package} />
-              <StatCard title="Completed Today" value="3" icon={CheckCircle} />
-              <StatCard title="Today's Earnings" value="₹8,500" icon={IndianRupee} />
+              <StatCard title="Assigned Pickups" value={bookings.filter(b => b.status === "assigned").length} icon={Package} />
+              <StatCard title="Completed Today" value={bookings.filter(b => b.status === "completed").length} icon={CheckCircle} />
+              <StatCard title="Today's Earnings" value={`₹${totalValue.toFixed(0)}`} icon={IndianRupee} />
             </div>
 
             <div>
               <h2 className="text-2xl font-semibold mb-6">Assigned Pickups</h2>
               <div className="grid gap-6">
-                {mockBookings.filter(b => b.status === "assigned").map((booking) => (
-                  <BookingCard key={booking.id} {...booking} />
+                {bookings.filter(b => b.status === "assigned").map((booking) => (
+                  <div key={booking.id}>
+                    <BookingCard 
+                      id={booking.id}
+                      customerName={booking.customerName}
+                      phone={booking.customerPhone}
+                      address={booking.customerAddress}
+                      items={booking.items.map(item => ({ 
+                        category: item.categoryName, 
+                        quantity: item.quantity 
+                      }))}
+                      totalValue={parseFloat(booking.totalValue)}
+                      status={booking.status}
+                      date={new Date(booking.createdAt)}
+                    />
+                    <Button 
+                      className="mt-2 w-full"
+                      onClick={() => updateStatusMutation.mutate({ bookingId: booking.id, status: "completed" })}
+                    >
+                      Mark as Completed
+                    </Button>
+                  </div>
                 ))}
+                {bookings.filter(b => b.status === "assigned").length === 0 && (
+                  <p className="text-muted-foreground">No assigned pickups</p>
+                )}
               </div>
             </div>
           </TabsContent>
