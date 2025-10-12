@@ -1,23 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OTPInput } from "@/components/OTPInput";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Leaf } from "lucide-react";
+import type { ConfirmationResult, RecaptchaVerifier } from "firebase/auth";
 
 export default function Login() {
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  const { setupRecaptcha, sendOTP, verifyOTP, user } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
-  const handleSendOTP = () => {
-    console.log("Sending OTP to:", phone);
-    setStep("otp");
+  useEffect(() => {
+    if (user) {
+      setLocation('/dashboard');
+    }
+  }, [user, setLocation]);
+
+  useEffect(() => {
+    const verifier = setupRecaptcha('recaptcha-container');
+    setRecaptchaVerifier(verifier);
+  }, [setupRecaptcha]);
+
+  const handleSendOTP = async () => {
+    if (!phone || !recaptchaVerifier) return;
+    
+    setLoading(true);
+    try {
+      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
+      const result = await sendOTP(formattedPhone, recaptchaVerifier);
+      setConfirmationResult(result);
+      setStep("otp");
+      toast({
+        title: "OTP Sent",
+        description: "Please check your phone for the verification code.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send OTP. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerifyOTP = () => {
-    console.log("Verifying OTP:", otp);
+  const handleVerifyOTP = async () => {
+    if (!confirmationResult || otp.length !== 6) return;
+    
+    setLoading(true);
+    try {
+      await verifyOTP(confirmationResult, otp);
+      toast({
+        title: "Success",
+        description: "Login successful!",
+      });
+      setLocation('/dashboard');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Invalid OTP. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,10 +108,10 @@ export default function Login() {
               className="w-full" 
               size="lg"
               onClick={handleSendOTP}
-              disabled={!phone}
+              disabled={!phone || loading}
               data-testid="button-send-otp"
             >
-              Send OTP
+              {loading ? "Sending..." : "Send OTP"}
             </Button>
           </div>
         ) : (
@@ -68,15 +127,19 @@ export default function Login() {
               className="w-full" 
               size="lg"
               onClick={handleVerifyOTP}
-              disabled={otp.length !== 6}
+              disabled={otp.length !== 6 || loading}
               data-testid="button-verify-otp"
             >
-              Verify & Continue
+              {loading ? "Verifying..." : "Verify & Continue"}
             </Button>
             <Button 
               variant="ghost" 
               className="w-full"
-              onClick={() => setStep("phone")}
+              onClick={() => {
+                setStep("phone");
+                setOtp("");
+              }}
+              disabled={loading}
               data-testid="button-change-number"
             >
               Change Number
@@ -84,6 +147,7 @@ export default function Login() {
           </div>
         )}
       </Card>
+      <div id="recaptcha-container"></div>
     </div>
   );
 }

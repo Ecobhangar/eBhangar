@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { BookingCard } from "@/components/BookingCard";
 import { VendorCard } from "@/components/VendorCard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Package, 
   CheckCircle, 
@@ -73,6 +75,13 @@ const mockVendors = [
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("customer");
+  const { user, signOut } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const handleLogout = async () => {
+    await signOut();
+    setLocation('/login');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,8 +92,11 @@ export default function Dashboard() {
             <span className="text-xl font-bold font-[Poppins]">eBhangar</span>
           </div>
           <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground hidden sm:block">
+              {user?.phoneNumber}
+            </span>
             <ThemeToggle />
-            <Button variant="ghost" data-testid="button-logout">Logout</Button>
+            <Button variant="ghost" onClick={handleLogout} data-testid="button-logout">Logout</Button>
           </div>
         </div>
       </header>
