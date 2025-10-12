@@ -115,6 +115,27 @@ export default function Dashboard() {
     },
   });
 
+  const cancelBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/cancel`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      toast({
+        title: "Booking Cancelled",
+        description: "Your booking has been cancelled successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel booking",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleLogout = async () => {
     await signOut();
     setLocation('/login');
@@ -123,6 +144,12 @@ export default function Dashboard() {
   const handleDeleteBooking = (bookingId: string) => {
     if (confirm("Are you sure you want to delete this booking?")) {
       deleteBookingMutation.mutate(bookingId);
+    }
+  };
+
+  const handleCancelBooking = (bookingId: string) => {
+    if (confirm("Are you sure you want to cancel this booking? This will return it to pending status.")) {
+      cancelBookingMutation.mutate(bookingId);
     }
   };
 
@@ -206,6 +233,7 @@ export default function Dashboard() {
                       showActions={true}
                       onDelete={handleDeleteBooking}
                       onEdit={handleEditBooking}
+                      onCancel={handleCancelBooking}
                     />
                   ))}
                 </div>

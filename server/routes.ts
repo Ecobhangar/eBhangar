@@ -230,6 +230,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/bookings/:id/cancel", authenticateUser, async (req, res) => {
+    try {
+      const booking = await storage.getBooking(req.params.id);
+      
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Only customer who created the booking can cancel
+      if (booking.customerId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Only assigned bookings can be cancelled
+      if (booking.status !== "assigned") {
+        return res.status(400).json({ error: "Only assigned bookings can be cancelled" });
+      }
+
+      const updatedBooking = await storage.cancelBooking(req.params.id);
+      res.json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.patch("/api/bookings/:id", authenticateUser, async (req, res) => {
     try {
       const booking = await storage.getBooking(req.params.id);

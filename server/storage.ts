@@ -45,6 +45,7 @@ export interface IStorage {
   assignVendor(bookingId: string, vendorId: string): Promise<Booking | undefined>;
   updateBookingStatus(bookingId: string, status: string): Promise<Booking | undefined>;
   deleteBooking(bookingId: string): Promise<void>;
+  cancelBooking(bookingId: string): Promise<Booking | undefined>;
   updateBooking(bookingId: string, booking: Partial<InsertBooking>, items?: InsertBookingItem[]): Promise<Booking | undefined>;
 }
 
@@ -194,6 +195,14 @@ export class DbStorage implements IStorage {
   async assignVendor(bookingId: string, vendorId: string): Promise<Booking | undefined> {
     const result = await db.update(bookings)
       .set({ vendorId, status: "assigned" })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+    return result[0];
+  }
+
+  async cancelBooking(bookingId: string): Promise<Booking | undefined> {
+    const result = await db.update(bookings)
+      .set({ vendorId: null, status: "pending" })
       .where(eq(bookings.id, bookingId))
       .returning();
     return result[0];

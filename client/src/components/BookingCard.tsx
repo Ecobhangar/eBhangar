@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Phone, Trash2, Edit, UserPlus } from "lucide-react";
+import { Calendar, MapPin, Phone, Trash2, Edit, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import {
   Select,
@@ -22,6 +22,7 @@ interface BookingCardProps {
   date: Date;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onCancel?: (id: string) => void;
   showActions?: boolean;
   vendors?: Array<{ id: string; name: string }>;
   onAssignVendor?: (bookingId: string, vendorId: string) => void;
@@ -34,7 +35,7 @@ const statusConfig = {
   completed: { color: "bg-primary text-primary-foreground", label: "Completed" },
 };
 
-export function BookingCard({ id, customerName, phone, address, items, totalValue, status, date, onDelete, onEdit, showActions = false, vendors = [], onAssignVendor, isAdmin = false }: BookingCardProps) {
+export function BookingCard({ id, customerName, phone, address, items, totalValue, status, date, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false }: BookingCardProps) {
   const config = statusConfig[status];
   
   return (
@@ -49,26 +50,40 @@ export function BookingCard({ id, customerName, phone, address, items, totalValu
         </div>
         <div className="flex items-center gap-2">
           <Badge className={config.color} data-testid={`badge-status-${id}`}>{config.label}</Badge>
-          {showActions && status === "pending" && (
+          {showActions && (
             <>
-              {onEdit && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => onEdit(id)}
-                  data-testid={`button-edit-${id}`}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
+              {status === "pending" && (
+                <>
+                  {onEdit && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => onEdit(id)}
+                      data-testid={`button-edit-${id}`}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => onDelete(id)}
+                      data-testid={`button-delete-${id}`}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  )}
+                </>
               )}
-              {onDelete && (
+              {status === "assigned" && onCancel && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => onDelete(id)}
-                  data-testid={`button-delete-${id}`}
+                  onClick={() => onCancel(id)}
+                  data-testid={`button-cancel-${id}`}
                 >
-                  <Trash2 className="w-4 h-4 text-destructive" />
+                  <XCircle className="w-4 h-4 text-destructive" />
                 </Button>
               )}
             </>
