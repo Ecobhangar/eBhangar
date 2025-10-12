@@ -15,6 +15,7 @@ import {
   Leaf
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "wouter";
 
 const categories = [
   { icon: AirVent, name: "Old AC", rate: "₹800-1500/unit" },
@@ -48,7 +49,9 @@ export default function Landing() {
             <span className="text-xl font-bold font-[Poppins]" data-testid="text-logo">eBhangar</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" data-testid="button-nav-login">Login</Button>
+            <Link href="/login">
+              <Button variant="ghost" data-testid="button-nav-login">Login</Button>
+            </Link>
             <ThemeToggle />
           </div>
         </div>
@@ -89,9 +92,11 @@ export default function Landing() {
           <p className="text-lg text-muted-foreground mb-8">
             Join thousands of users who are turning waste into worth while protecting our planet
           </p>
-          <Button size="lg" data-testid="button-get-started">
-            Get Started Today
-          </Button>
+          <Link href="/login">
+            <Button size="lg" data-testid="button-get-started">
+              Get Started Today
+            </Button>
+          </Link>
         </div>
       </section>
 

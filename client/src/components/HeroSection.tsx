@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Leaf } from "lucide-react";
+import { Link } from "wouter";
 
 export function HeroSection() {
   return (
@@ -25,19 +26,22 @@ export function HeroSection() {
             Get fair prices while contributing to a sustainable future.
           </p>
           <div className="flex gap-4">
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20"
-              data-testid="button-book-pickup"
-            >
-              Book a Pickup
-            </Button>
+            <Link href="/login">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20"
+                data-testid="button-book-pickup"
+              >
+                Book a Pickup
+              </Button>
+            </Link>
             <Button 
               size="lg" 
               variant="outline" 
               className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20"
               data-testid="button-learn-more"
+              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Learn More
             </Button>
