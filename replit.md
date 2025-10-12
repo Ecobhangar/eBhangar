@@ -183,12 +183,14 @@ Required environment variables:
 - 9 scrap categories seeded (Old AC, Refrigerator, Washing Machine, Iron, Copper, Plastic, Paper, Books, Clothes)
 
 **Customer Features:**
-- Create bookings with multi-category selection
+- Cart-like booking experience: Select items, see total estimated value, then confirm
 - Quantity adjustment with +/- buttons
 - Real-time price calculation based on average category rates
 - View personal booking history
-- Edit pending bookings (pre-populated form with existing data)
-- Delete pending bookings (with confirmation dialog)
+- **Status-based actions:**
+  - **Pending bookings:** Edit and Delete options available
+  - **Assigned bookings:** Cancel option available (returns to pending status)
+  - **Completed bookings:** View only, no actions
 - WhatsApp notification to admin with booking details
 
 **Admin Features:**
