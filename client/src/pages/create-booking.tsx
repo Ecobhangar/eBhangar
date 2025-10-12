@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,8 +46,12 @@ interface SelectedItem {
 
 export default function CreateBooking() {
   const [, setLocation] = useLocation();
+  const [, params] = useRoute("/bookings/edit/:id");
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  const bookingId = params?.id;
+  const isEditMode = !!bookingId;
   
   const [selectedItems, setSelectedItems] = useState<Record<string, SelectedItem>>({});
   const [customerName, setCustomerName] = useState("");
@@ -58,29 +62,66 @@ export default function CreateBooking() {
     queryKey: ["/api/categories"],
   });
 
+  const { data: existingBooking } = useQuery<any>({
+    queryKey: ["/api/bookings", bookingId],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/bookings/${bookingId}`, {});
+      return res.json();
+    },
+    enabled: isEditMode && !!bookingId,
+  });
+
+  useEffect(() => {
+    if (existingBooking && isEditMode) {
+      setCustomerName(existingBooking.customerName || "");
+      setCustomerPhone(existingBooking.customerPhone || "");
+      setCustomerAddress(existingBooking.customerAddress || "");
+      
+      const items: Record<string, SelectedItem> = {};
+      (existingBooking.items || []).forEach((item: any) => {
+        const category = categories.find(c => c.id === item.categoryId);
+        if (category) {
+          const avgRate = (parseFloat(category.minRate) + parseFloat(category.maxRate)) / 2;
+          items[item.categoryId] = {
+            categoryId: item.categoryId,
+            categoryName: item.categoryName,
+            quantity: item.quantity,
+            rate: avgRate,
+            value: avgRate * item.quantity
+          };
+        }
+      });
+      setSelectedItems(items);
+    }
+  }, [existingBooking, isEditMode, categories]);
+
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/bookings", data);
+      const method = isEditMode ? "PATCH" : "POST";
+      const url = isEditMode ? `/api/bookings/${bookingId}` : "/api/bookings";
+      const res = await apiRequest(method, url, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
       toast({
-        title: "Booking Created",
-        description: "Your pickup has been scheduled successfully!",
+        title: isEditMode ? "Booking Updated" : "Booking Created",
+        description: isEditMode ? "Your booking has been updated successfully!" : "Your pickup has been scheduled successfully!",
       });
       
-      // Generate WhatsApp message
-      const totalValue = Object.values(selectedItems).reduce((sum, item) => sum + item.value, 0);
-      const itemsList = Object.values(selectedItems)
-        .map(item => `${item.categoryName} x${item.quantity}`)
-        .join(", ");
-      
-      const adminPhone = "+919999999999"; // Admin WhatsApp number
-      const message = `New Booking!\n\nCustomer: ${customerName}\nPhone: ${customerPhone}\nAddress: ${customerAddress}\n\nItems: ${itemsList}\n\nTotal Value: ₹${totalValue}\n\nPlease assign a vendor.`;
-      
-      const whatsappUrl = `https://wa.me/${adminPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      // Generate WhatsApp message only for new bookings
+      if (!isEditMode) {
+        const totalValue = Object.values(selectedItems).reduce((sum, item) => sum + item.value, 0);
+        const itemsList = Object.values(selectedItems)
+          .map(item => `${item.categoryName} x${item.quantity}`)
+          .join(", ");
+        
+        const adminPhone = "+919999999999"; // Admin WhatsApp number
+        const message = `New Booking!\n\nCustomer: ${customerName}\nPhone: ${customerPhone}\nAddress: ${customerAddress}\n\nItems: ${itemsList}\n\nTotal Value: ₹${totalValue}\n\nPlease assign a vendor.`;
+        
+        const whatsappUrl = `https://wa.me/${adminPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      }
       
       setLocation("/dashboard");
     },
@@ -175,8 +216,8 @@ export default function CreateBooking() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold font-[Poppins] mb-2">Create New Booking</h1>
-        <p className="text-muted-foreground mb-8">Select items and schedule your scrap pickup</p>
+        <h1 className="text-3xl font-bold font-[Poppins] mb-2">{isEditMode ? "Edit Booking" : "Create New Booking"}</h1>
+        <p className="text-muted-foreground mb-8">{isEditMode ? "Update your booking details" : "Select items and schedule your scrap pickup"}</p>
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">

@@ -205,6 +205,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/bookings/:id", authenticateUser, async (req, res) => {
+    try {
+      const booking = await storage.getBooking(req.params.id);
+      
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Only customer who created the booking or admin can delete
+      if (req.user!.role !== "admin" && booking.customerId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Only pending bookings can be deleted
+      if (booking.status !== "pending") {
+        return res.status(400).json({ error: "Only pending bookings can be deleted" });
+      }
+
+      await storage.deleteBooking(req.params.id);
+      res.json({ message: "Booking deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/bookings/:id", authenticateUser, async (req, res) => {
+    try {
+      const booking = await storage.getBooking(req.params.id);
+      
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Only customer who created the booking can edit
+      if (booking.customerId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Only pending bookings can be edited
+      if (booking.status !== "pending") {
+        return res.status(400).json({ error: "Only pending bookings can be edited" });
+      }
+
+      const { customerName, customerPhone, customerAddress, items, totalValue } = req.body;
+      
+      const updatedBooking = await storage.updateBooking(
+        req.params.id,
+        {
+          customerName,
+          customerPhone,
+          customerAddress,
+          totalValue: totalValue?.toString()
+        },
+        items
+      );
+
+      res.json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -44,6 +44,8 @@ export interface IStorage {
   createBooking(booking: InsertBooking, items: InsertBookingItem[]): Promise<Booking>;
   assignVendor(bookingId: string, vendorId: string): Promise<Booking | undefined>;
   updateBookingStatus(bookingId: string, status: string): Promise<Booking | undefined>;
+  deleteBooking(bookingId: string): Promise<void>;
+  updateBooking(bookingId: string, booking: Partial<InsertBooking>, items?: InsertBookingItem[]): Promise<Booking | undefined>;
 }
 
 export class DbStorage implements IStorage {
@@ -207,6 +209,27 @@ export class DbStorage implements IStorage {
       .set(updateData)
       .where(eq(bookings.id, bookingId))
       .returning();
+    return result[0];
+  }
+
+  async deleteBooking(bookingId: string): Promise<void> {
+    await db.delete(bookingItems).where(eq(bookingItems.bookingId, bookingId));
+    await db.delete(bookings).where(eq(bookings.id, bookingId));
+  }
+
+  async updateBooking(bookingId: string, booking: Partial<InsertBooking>, items?: InsertBookingItem[]): Promise<Booking | undefined> {
+    const result = await db.update(bookings)
+      .set(booking)
+      .where(eq(bookings.id, bookingId))
+      .returning();
+    
+    if (items && items.length > 0) {
+      await db.delete(bookingItems).where(eq(bookingItems.bookingId, bookingId));
+      await db.insert(bookingItems).values(
+        items.map(item => ({ ...item, bookingId }))
+      );
+    }
+    
     return result[0];
   }
 }

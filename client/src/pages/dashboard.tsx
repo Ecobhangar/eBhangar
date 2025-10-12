@@ -94,9 +94,41 @@ export default function Dashboard() {
     },
   });
 
+  const deleteBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const res = await apiRequest("DELETE", `/api/bookings/${bookingId}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      toast({
+        title: "Booking Deleted",
+        description: "Your booking has been deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete booking",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleLogout = async () => {
     await signOut();
     setLocation('/login');
+  };
+
+  const handleDeleteBooking = (bookingId: string) => {
+    if (confirm("Are you sure you want to delete this booking?")) {
+      deleteBookingMutation.mutate(bookingId);
+    }
+  };
+
+  const handleEditBooking = (bookingId: string) => {
+    // Navigate to edit page with booking ID
+    setLocation(`/bookings/edit/${bookingId}`);
   };
 
   const customerBookings = bookings.filter(b => b.status !== "completed");
@@ -171,6 +203,9 @@ export default function Dashboard() {
                       totalValue={parseFloat(booking.totalValue)}
                       status={booking.status}
                       date={new Date(booking.createdAt)}
+                      showActions={true}
+                      onDelete={handleDeleteBooking}
+                      onEdit={handleEditBooking}
                     />
                   ))}
                 </div>
@@ -199,59 +234,38 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div>
-                <h2 className="text-2xl font-semibold mb-6">All Bookings</h2>
-                {bookingsLoading ? (
-                  <p>Loading bookings...</p>
-                ) : (
-                  <div className="space-y-4">
-                    {bookings.map((booking) => (
-                      <BookingCard 
-                        key={booking.id} 
-                        id={booking.id}
-                        customerName={booking.customerName}
-                        phone={booking.customerPhone}
-                        address={booking.customerAddress}
-                        items={booking.items.map(item => ({ 
-                          category: item.categoryName, 
-                          quantity: item.quantity 
-                        }))}
-                        totalValue={parseFloat(booking.totalValue)}
-                        status={booking.status}
-                        date={new Date(booking.createdAt)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-semibold mb-6">Available Vendors</h2>
+            <div>
+              <h2 className="text-2xl font-semibold mb-6">All Bookings</h2>
+              {bookingsLoading ? (
+                <p>Loading bookings...</p>
+              ) : (
                 <div className="space-y-4">
-                  {vendors.map((vendor) => (
-                    <VendorCard 
-                      key={vendor.id} 
-                      id={vendor.id}
-                      name={vendor.user.name || vendor.user.phoneNumber}
-                      phone={vendor.user.phoneNumber}
-                      location={vendor.location}
-                      onAssign={() => {
-                        const pendingBooking = pendingBookings[0];
-                        if (pendingBooking) {
-                          assignVendorMutation.mutate({ 
-                            bookingId: pendingBooking.id, 
-                            vendorId: vendor.id 
-                          });
-                        }
+                  {bookings.map((booking) => (
+                    <BookingCard 
+                      key={booking.id} 
+                      id={booking.id}
+                      customerName={booking.customerName}
+                      phone={booking.customerPhone}
+                      address={booking.customerAddress}
+                      items={booking.items.map(item => ({ 
+                        category: item.categoryName, 
+                        quantity: item.quantity 
+                      }))}
+                      totalValue={parseFloat(booking.totalValue)}
+                      status={booking.status}
+                      date={new Date(booking.createdAt)}
+                      isAdmin={true}
+                      vendors={vendors.map(v => ({ 
+                        id: v.id, 
+                        name: v.user.name || v.user.phoneNumber 
+                      }))}
+                      onAssignVendor={(bookingId, vendorId) => {
+                        assignVendorMutation.mutate({ bookingId, vendorId });
                       }}
                     />
                   ))}
-                  {vendors.length === 0 && (
-                    <p className="text-muted-foreground">No vendors available</p>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
           </TabsContent>
 

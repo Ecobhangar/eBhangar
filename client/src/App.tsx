@@ -18,6 +18,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/bookings/new" component={CreateBooking} />
+      <Route path="/bookings/edit/:id" component={CreateBooking} />
       <Route component={NotFound} />
     </Switch>
   );
