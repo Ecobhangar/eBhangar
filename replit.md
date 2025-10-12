@@ -165,3 +165,70 @@ Required environment variables:
 - `VITE_FIREBASE_AUTH_DOMAIN` - Firebase auth domain
 - `VITE_FIREBASE_PROJECT_ID` - Firebase project identifier
 - Additional Firebase config values for messaging and storage
+
+**Important:** Firebase Phone Authentication must be enabled in your Firebase Console:
+1. Go to Firebase Console → Authentication → Sign-in method
+2. Enable "Phone" provider
+3. Configure authorized domains if needed
+4. Ensure environment variables contain valid Firebase credentials
+
+## Current Implementation Status
+
+### ✅ Completed Features
+
+**Core Functionality:**
+- Landing page with hero section and category showcase
+- Firebase phone authentication with OTP verification
+- Role-based access control (Customer, Admin, Vendor)
+- 9 scrap categories seeded (Old AC, Refrigerator, Washing Machine, Iron, Copper, Plastic, Paper, Books, Clothes)
+
+**Customer Features:**
+- Create bookings with multi-category selection
+- Quantity adjustment with +/- buttons
+- Real-time price calculation based on average category rates
+- View personal booking history
+- WhatsApp notification to admin with booking details
+
+**Admin Features:**
+- View all bookings across platform
+- Assign bookings to vendors
+- Track booking statuses
+- Manage vendor assignments
+
+**Vendor Features:**
+- View assigned pickups
+- Mark bookings as completed
+- Track active pickup count
+
+**Technical Implementation:**
+- PostgreSQL database with Drizzle ORM
+- RESTful API with Express.js
+- Authentication middleware with Firebase integration
+- Auto-user creation on first login
+- Transaction support for complex operations
+- Responsive design with Tailwind CSS
+
+### 🎯 How to Use the Application
+
+1. **Login:** Navigate to `/login` and authenticate with phone number + OTP
+2. **Create Booking:** Go to `/bookings/new` to schedule a pickup
+3. **View Dashboard:** Access `/dashboard` for role-specific features
+4. **Admin Actions:** Assign vendors to pending bookings
+5. **Vendor Actions:** Mark assigned pickups as completed
+
+### 📱 WhatsApp Integration
+
+When a booking is created, a WhatsApp link is generated that opens WhatsApp with a pre-filled message containing:
+- Customer details (name, phone, address)
+- Selected items with quantities
+- Total estimated value
+- Admin can click to send the message to their WhatsApp number
+
+### 🔄 Future Enhancements (Not Implemented)
+
+- WhatsApp Business API for automated notifications
+- Real-time vendor location tracking
+- Payment integration
+- Rating and review system
+- Analytics dashboard
+- Push notifications
