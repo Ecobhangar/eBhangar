@@ -187,12 +187,14 @@ Required environment variables:
 - Quantity adjustment with +/- buttons
 - Real-time price calculation based on average category rates
 - View personal booking history
+- Edit pending bookings (pre-populated form with existing data)
+- Delete pending bookings (with confirmation dialog)
 - WhatsApp notification to admin with booking details
 
 **Admin Features:**
 - View all bookings across platform
-- Assign bookings to vendors
-- Track booking statuses
+- Assign vendors to pending bookings via dropdown selector on booking cards
+- Track booking statuses (pending → assigned → completed)
 - Manage vendor assignments
 
 **Vendor Features:**
