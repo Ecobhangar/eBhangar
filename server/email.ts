@@ -21,7 +21,7 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
-    secure: false, // true for 465, false for other ports
+    secure: SMTP_PORT === 465, // true for 465 (implicit TLS), false for other ports
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS,

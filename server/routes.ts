@@ -168,7 +168,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerName: booking.customerName,
         customerPhone: booking.customerPhone,
         customerAddress: booking.customerAddress,
-        items: items,
+        items: items.map((item: any) => ({
+          categoryName: item.categoryName,
+          quantity: item.quantity,
+          estimatedValue: item.value?.toString() || '0'
+        })),
         totalValue: booking.totalValue
       }).catch(err => console.error('[email] Failed to send notification:', err));
 
