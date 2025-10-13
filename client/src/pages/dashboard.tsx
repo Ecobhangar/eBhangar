@@ -36,6 +36,7 @@ interface Booking {
   totalValue: string;
   status: "pending" | "assigned" | "completed";
   createdAt: string;
+  completedAt?: string | null;
   items: BookingItem[];
   vendor?: { name: string; phone: string };
 }
@@ -245,6 +246,7 @@ export default function Dashboard() {
                       totalValue={parseFloat(booking.totalValue)}
                       status={booking.status}
                       date={new Date(booking.createdAt)}
+                      completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                       showActions={true}
                       vendorInfo={booking.vendor}
                       onDelete={handleDeleteBooking}
@@ -303,6 +305,7 @@ export default function Dashboard() {
                         totalValue={parseFloat(booking.totalValue)}
                         status={booking.status}
                         date={new Date(booking.createdAt)}
+                        completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                         isAdmin={true}
                         vendors={filteredVendors.map(v => ({ 
                           id: v.id, 
@@ -350,6 +353,7 @@ export default function Dashboard() {
                       totalValue={parseFloat(booking.totalValue)}
                       status={booking.status}
                       date={new Date(booking.createdAt)}
+                      completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                       vendorInfo={booking.vendor}
                     />
                     <Button 
