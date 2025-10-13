@@ -206,23 +206,61 @@ export default function Dashboard() {
           </TabsList>
 
           <TabsContent value="customer" className="space-y-8">
-            <div className="flex justify-between items-center">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold font-[Poppins]">My Dashboard</h1>
+                <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">My Dashboard</h1>
                 <p className="text-muted-foreground mt-1">Track your bookings and earnings</p>
               </div>
-              <Button onClick={() => setLocation("/bookings/new")} data-testid="button-new-booking" className="gap-2">
-                <Plus className="w-4 h-4" />
+              {/* Desktop Button */}
+              <Button 
+                onClick={() => setLocation("/bookings/new")} 
+                data-testid="button-new-booking" 
+                className="hidden sm:flex gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                size="lg"
+              >
+                <Plus className="w-5 h-5" />
                 New Booking
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Total Bookings" value={bookings.length} icon={Package} />
-              <StatCard title="Pending" value={pendingBookings.length} icon={Clock} />
-              <StatCard title="Completed" value={completedBookings.length} icon={CheckCircle} />
-              <StatCard title="Total Earned" value={`₹${totalValue.toFixed(0)}`} icon={IndianRupee} />
+            {/* Stats Cards with Gradients */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <StatCard 
+                title="Total Bookings" 
+                value={bookings.length} 
+                icon={Package}
+                gradient="from-blue-500 to-cyan-600"
+              />
+              <StatCard 
+                title="Pending" 
+                value={pendingBookings.length} 
+                icon={Clock}
+                gradient="from-amber-500 to-orange-600"
+              />
+              <StatCard 
+                title="Completed" 
+                value={completedBookings.length} 
+                icon={CheckCircle}
+                gradient="from-green-500 to-emerald-600"
+              />
+              <StatCard 
+                title="Total Earned" 
+                value={`₹${totalValue.toFixed(0)}`} 
+                icon={IndianRupee}
+                gradient="from-violet-500 to-purple-600"
+              />
             </div>
+
+            {/* Mobile Floating Action Button */}
+            <Button
+              onClick={() => setLocation("/bookings/new")}
+              className="sm:hidden fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 z-50 hover:scale-110 transition-all duration-300"
+              size="icon"
+              data-testid="button-new-booking-mobile"
+            >
+              <Plus className="w-8 h-8" />
+            </Button>
 
             <div>
               <h2 className="text-2xl font-semibold mb-6">My Bookings</h2>
@@ -261,22 +299,34 @@ export default function Dashboard() {
 
           <TabsContent value="admin" className="space-y-8">
             <div>
-              <h1 className="text-3xl font-bold font-[Poppins]">Admin Dashboard</h1>
+              <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Admin Dashboard</h1>
               <p className="text-muted-foreground mt-1">Manage all bookings and vendors</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <StatCard 
                 title="Total Bookings" 
                 value={bookings.length} 
                 icon={Package}
+                gradient="from-blue-500 to-cyan-600"
               />
-              <StatCard title="Pending" value={pendingBookings.length} icon={Clock} />
-              <StatCard title="Completed" value={completedBookings.length} icon={CheckCircle} />
+              <StatCard 
+                title="Pending" 
+                value={pendingBookings.length} 
+                icon={Clock}
+                gradient="from-amber-500 to-orange-600"
+              />
+              <StatCard 
+                title="Completed" 
+                value={completedBookings.length} 
+                icon={CheckCircle}
+                gradient="from-green-500 to-emerald-600"
+              />
               <StatCard 
                 title="Total Revenue" 
                 value={`₹${totalValue.toFixed(0)}`} 
                 icon={IndianRupee}
+                gradient="from-violet-500 to-purple-600"
               />
             </div>
 
@@ -326,14 +376,29 @@ export default function Dashboard() {
 
           <TabsContent value="vendor" className="space-y-8">
             <div>
-              <h1 className="text-3xl font-bold font-[Poppins]">Vendor Dashboard</h1>
+              <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Vendor Dashboard</h1>
               <p className="text-muted-foreground mt-1">View and manage assigned pickups</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard title="Assigned Pickups" value={bookings.filter(b => b.status === "assigned").length} icon={Package} />
-              <StatCard title="Completed Today" value={bookings.filter(b => b.status === "completed").length} icon={CheckCircle} />
-              <StatCard title="Today's Earnings" value={`₹${totalValue.toFixed(0)}`} icon={IndianRupee} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <StatCard 
+                title="Assigned Pickups" 
+                value={bookings.filter(b => b.status === "assigned").length} 
+                icon={Package}
+                gradient="from-amber-500 to-orange-600"
+              />
+              <StatCard 
+                title="Completed Today" 
+                value={bookings.filter(b => b.status === "completed").length} 
+                icon={CheckCircle}
+                gradient="from-green-500 to-emerald-600"
+              />
+              <StatCard 
+                title="Today's Earnings" 
+                value={`₹${totalValue.toFixed(0)}`} 
+                icon={IndianRupee}
+                gradient="from-violet-500 to-purple-600"
+              />
             </div>
 
             <div>
