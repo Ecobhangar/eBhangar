@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authenticateUser, requireRole } from "./middleware/auth";
 import { insertUserSchema, insertCategorySchema, insertVendorSchema, insertBookingSchema } from "@shared/schema";
+import { sendBookingNotification } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -160,6 +161,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         items
       );
+
+      // Send email notification to admin (async, non-blocking)
+      sendBookingNotification({
+        id: booking.id,
+        customerName: booking.customerName,
+        customerPhone: booking.customerPhone,
+        customerAddress: booking.customerAddress,
+        items: items,
+        totalValue: booking.totalValue
+      }).catch(err => console.error('[email] Failed to send notification:', err));
 
       res.json(booking);
     } catch (error: any) {
