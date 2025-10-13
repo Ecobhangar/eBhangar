@@ -12,7 +12,9 @@ import {
   Trash2,
   FileText,
   BookOpen,
-  Leaf
+  Leaf,
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
@@ -42,11 +44,14 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-50">
+      {/* Header */}
+      <header className="border-b sticky top-0 bg-background/95 backdrop-blur-lg z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Leaf className="w-7 h-7 text-primary" />
-            <span className="text-xl font-bold font-[Poppins]" data-testid="text-logo">eBhangar</span>
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+              <Leaf className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" data-testid="text-logo">eBhangar</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login">
@@ -57,16 +62,22 @@ export default function Landing() {
         </div>
       </header>
 
+      {/* Hero Section */}
       <HeroSection />
+      
+      {/* How It Works */}
       <HowItWorks />
 
-      <section className="py-16">
+      {/* What We Collect */}
+      <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold font-[Poppins] mb-3" data-testid="text-categories-title">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold font-[Poppins] mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" data-testid="text-categories-title">
               What We Collect
             </h2>
-            <p className="text-muted-foreground">Select from our wide range of recyclable items</p>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Select from our wide range of recyclable items with transparent pricing
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -84,27 +95,59 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-16 bg-primary/5">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold font-[Poppins] mb-4" data-testid="text-cta-title">
-            Ready to Make a Difference?
+      {/* CTA Section with Gradient */}
+      <section className="relative py-24 overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1600&h=400&fit=crop')] opacity-10 bg-cover bg-center" />
+        
+        {/* Content */}
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 mb-6">
+            <Sparkles className="w-4 h-4 text-white" />
+            <span className="text-sm font-medium text-white">Join 10,000+ Happy Users</span>
+          </div>
+
+          <h2 className="text-4xl md:text-5xl font-bold font-[Poppins] mb-6 text-white" data-testid="text-cta-title">
+            Get Started Today
           </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            Join thousands of users who are turning waste into worth while protecting our planet
+          <p className="text-xl text-white/95 mb-10 leading-relaxed max-w-2xl mx-auto">
+            Join thousands of users who are turning waste into worth while protecting our planet. Book your first pickup now!
           </p>
+          
           <Link href="/login">
-            <Button size="lg" data-testid="button-get-started">
-              Get Started Today
+            <Button 
+              size="lg" 
+              className="bg-white text-green-700 hover:bg-white/95 shadow-2xl hover:shadow-white/50 transition-all duration-300 text-lg font-semibold px-10 py-7 h-auto group"
+              data-testid="button-get-started"
+            >
+              Book Your First Pickup
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
       </section>
 
-      <footer className="border-t py-8">
+      {/* Footer */}
+      <footer className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-t py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>© 2024 eBhangar. All rights reserved.</p>
-            <p className="mt-2">Making recycling simple, one pickup at a time.</p>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            {/* Logo & Tagline */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                <Leaf className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">eBhangar</span>
+                <p className="text-sm text-muted-foreground">Making recycling simple</p>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="text-center md:text-right">
+              <p className="text-sm text-muted-foreground">© 2024 eBhangar. All rights reserved.</p>
+              <p className="text-xs text-muted-foreground mt-1">Turning waste into worth, one pickup at a time 🌱</p>
+            </div>
           </div>
         </div>
       </footer>

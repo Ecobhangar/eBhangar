@@ -2,152 +2,157 @@
 
 ## Design Approach
 
-**Selected Approach**: Hybrid (Material Design System + Service Platform References)
+**Selected Approach**: Hybrid (Premium Fintech Aesthetics + Service Platform Efficiency)
 
-Drawing inspiration from utility-focused service platforms (Uber, Swiggy, UrbanClap) combined with Material Design principles to create a trustworthy, efficient booking experience with strong environmental identity.
+Drawing inspiration from modern fintech platforms (Stripe, Revolut, Wise) combined with eco-conscious branding to create a premium, trustworthy scrap collection experience that feels sophisticated yet approachable.
 
 **Key Design Principles**:
-- Trust & Transparency: Clear pricing, status tracking, and vendor information
-- Efficiency First: Quick booking flow with minimal steps
-- Environmental Identity: Green theme without compromising functionality
-- Mobile-First: Optimized for smartphone users booking on-the-go
+- Premium Eco-Tech: Gradient-rich, polished interface with environmental authenticity
+- Effortless Efficiency: Intuitive booking flow with delightful micro-interactions
+- Trust Through Polish: Professional finish builds credibility and user confidence
+- Mobile-First Luxury: Premium experience optimized for smartphone users
 
 ## Core Design Elements
 
 ### A. Color Palette
 
-**Primary Colors (Eco-Green Theme)**:
-- Primary Green (Dark): `142 70% 35%` - Headers, primary buttons, key actions
-- Primary Green (Light): `142 65% 45%` - Interactive elements, hover states
-- Success Green: `140 75% 50%` - Completed bookings, success states
+**Primary Gradient System**:
+- Hero Gradient: `from-[142_65%_48%] via-[156_60%_52%] to-[168_55%_45%]` - Primary brand gradient
+- Accent Gradient: `from-[142_70%_40%] to-[142_65%_55%]` - Buttons, CTAs
+- Subtle Overlay: `from-[142_55%_25%]/80 to-[142_65%_35%]/60` - Image overlays
 
-**Neutral & Background**:
-- Light Mode BG: `0 0% 98%` - Main background
-- Light Mode Surface: `0 0% 100%` - Cards, forms
-- Dark Mode BG: `142 15% 12%` - Main background  
-- Dark Mode Surface: `142 12% 18%` - Cards, elevated surfaces
+**Surface Colors**:
+- Light Mode BG: `0 0% 98%` - Main background with subtle texture
+- Light Mode Card: `0 0% 100%` - Elevated surfaces with soft shadows
+- Dark Mode BG: `142 18% 10%` - Rich dark with green undertone
+- Dark Mode Card: `142 15% 16%` - Elevated dark surfaces
 
-**Semantic Colors**:
-- Warning/Pending: `38 92% 50%` - Pending bookings
-- Info/Assigned: `217 91% 60%` - Assigned status
-- Text Primary: `142 20% 15%` (light) / `0 0% 95%` (dark)
-- Text Secondary: `142 10% 40%` (light) / `0 0% 70%` (dark)
+**Semantic & Accent**:
+- Success: `142 70% 50%` - Confirmations, completed states
+- Pending: `38 95% 55%` - Warm amber for pending actions
+- Info: `198 88% 48%` - Cool cyan for information
+- Text Primary: `142 25% 12%` (light) / `142 5% 95%` (dark)
+- Text Muted: `142 12% 45%` (light) / `142 8% 65%` (dark)
 
 ### B. Typography
 
-**Font Families**:
-- Primary: Inter (Google Fonts) - UI, body text, forms
-- Accent: Poppins (Google Fonts) - Headers, CTAs, category names
+**Font Families** (Google Fonts):
+- Headers: Poppins (600 SemiBold, 500 Medium)
+- Body/UI: Inter (400 Regular, 500 Medium, 600 SemiBold)
 
 **Type Scale**:
-- H1/Hero: 2.5rem (40px), Poppins SemiBold
-- H2/Section: 2rem (32px), Poppins SemiBold  
-- H3/Card Title: 1.5rem (24px), Poppins Medium
-- Body: 1rem (16px), Inter Regular
-- Small/Meta: 0.875rem (14px), Inter Regular
-- Button/CTA: 1rem (16px), Inter Medium
+- Hero Display: 3rem (48px), Poppins SemiBold, tracking-tight
+- Section Header: 2.25rem (36px), Poppins SemiBold
+- Card Title: 1.375rem (22px), Poppins Medium
+- Body: 1rem (16px), Inter Regular, leading-relaxed
+- Caption: 0.875rem (14px), Inter Regular
+- Button: 0.9375rem (15px), Inter Medium
 
 ### C. Layout System
 
-**Spacing Primitives**: Use Tailwind units of 2, 4, 6, 8, 12, 16 for consistent rhythm
-- Micro spacing: p-2, gap-2 (buttons, inline elements)
-- Component padding: p-4, p-6 (cards, containers)
-- Section spacing: py-8, py-12, py-16 (vertical sections)
-- Container margins: mx-4, mx-6, mx-auto
+**Spacing Primitives**: Tailwind units of 2, 4, 6, 8, 12, 16, 20, 24
 
-**Grid System**:
-- Mobile: Single column, max-w-full px-4
-- Tablet: 2 columns for categories/bookings, max-w-5xl
-- Desktop: 3-4 columns for category grid, max-w-7xl
+- Tight spacing: gap-2, p-2 (inline elements, badges)
+- Component padding: p-6, p-8 (cards, modals)
+- Section rhythm: py-12, py-16, py-20 (vertical spacing)
+- Generous spacing: py-24, py-32 (hero, major sections)
+
+**Container Strategy**:
+- Hero/Full-width: w-full with max-w-7xl inner container
+- Content sections: max-w-6xl mx-auto px-4 md:px-6
+- Text content: max-w-prose for readability
+- Form containers: max-w-2xl for optimal completion
 
 ### D. Component Library
 
 **Navigation**:
-- Top Nav: Sticky header with logo, role-based menu items, profile/logout
-- Mobile: Bottom navigation bar with icons (Home, Categories, Bookings, Profile)
-- Admin/Vendor: Additional sidebar for management functions
+- Desktop: Backdrop-blur sticky header, logo left, menu center, CTA right
+- Mobile: Bottom nav bar with 4 icons, floating pill design with blur
+- Elevated surface: bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl
 
 **Cards & Containers**:
-- Category Cards: Rounded-2xl, shadow-md, hover:shadow-lg transition
-- Booking Cards: Border-l-4 with status color, rounded-lg, p-6
-- Info Cards: Light green tint background, rounded-xl, icon + text layout
+- Primary Cards: rounded-2xl, shadow-lg, hover:shadow-xl, border border-gray-200/50
+- Category Cards: Gradient border on hover, transform scale-[1.02] transition-all duration-300
+- Stat Cards: Glass morphism effect - bg-white/60 backdrop-blur-md
+- Booking Cards: Multi-layered shadow, status indicator with gradient accent
+
+**Buttons & CTAs**:
+- Primary: bg-gradient-to-r from-green-600 to-green-500, rounded-xl, py-3.5 px-8, shadow-lg hover:shadow-xl
+- Secondary: border-2 border-green-500, bg-transparent, backdrop-blur-sm when on images
+- Icon Buttons: rounded-full, p-3, hover:bg-green-50 dark:hover:bg-green-900/30
+- Floating Action: Fixed bottom-right, gradient bg, shadow-2xl, scale-110 hover
 
 **Forms & Inputs**:
-- Input Fields: Rounded-lg, border-2, focus:border-green-500, p-3
-- Dropdown/Select: Custom styled with green accent, rounded-lg
-- OTP Input: Individual digit boxes, square, text-2xl, monospace
-- Quantity Selector: +/- buttons with number display, green accent
-
-**Buttons**:
-- Primary CTA: bg-green-600, rounded-lg, py-3 px-6, font-medium
-- Secondary: variant="outline", border-green-600, bg-transparent
-- Icon Buttons: Circular, p-3, hover:bg-green-50
-- On Images: Blurred background (backdrop-blur-md), semi-transparent
+- Text Inputs: rounded-xl, border-2 border-gray-200, focus:border-green-500 focus:ring-4 focus:ring-green-500/20
+- Dropdowns: Custom styled, gradient accent on selected, smooth dropdown animation
+- Quantity Controls: Pill-shaped group, gradient on active, haptic-style feedback
+- OTP: Large squares (w-14 h-16), gradient border on active input
 
 **Data Display**:
-- Booking List: Timeline view with status indicators
-- Vendor Cards: Avatar, name, location pin, contact button
-- Price Display: Large green text for estimates, bold font
-- Status Badges: Rounded-full pills with color coding
+- Timeline View: Vertical line with gradient, status nodes with glow effect
+- Vendor Cards: Avatar with gradient ring, floating action buttons
+- Price Display: Extra-large (text-4xl), gradient text, animated counter
+- Status Pills: Gradient background, rounded-full, icon + label, subtle glow
 
-### E. Animations
+### E. Animations & Interactions
 
-**Minimal & Purposeful**:
-- Page Transitions: Subtle fade-in (200ms)
-- Button Feedback: Scale on tap (active:scale-95)
-- Card Hover: Gentle lift (hover:translate-y-[-2px])
-- Loading States: Spinner with green accent, no skeleton screens
-- Status Updates: Color fade transition (300ms)
+**Purposeful Motion**:
+- Page Transitions: Fade + slide up (duration-300, ease-out)
+- Card Hover: Lift (hover:-translate-y-1) + shadow expansion (duration-200)
+- Button Press: Scale down (active:scale-[0.98]) + brightness shift
+- Success States: Checkmark scale-in with green glow ring expansion
+- Loading: Gradient shimmer across skeleton, rotating spinner with gradient stroke
 
-Avoid: Scroll animations, parallax effects, decorative animations
+**Scroll Effects**:
+- Parallax hero image: Subtle transform on scroll (translateY -20%)
+- Fade-in sections: Opacity 0 to 1 with slight Y transform on viewport entry
+- Number counters: Animated increment on scroll into view
+- Gradient shift: Hue rotation on scroll for dynamic color feel
 
-## Images & Visual Assets
+## Images & Visual Strategy
 
 **Hero Section**:
-- Large hero image: Environmental worker collecting recyclables in urban setting
-- Image treatment: Subtle green overlay (bg-green-900/20)
-- Placement: Full-width, h-96 on mobile, h-[500px] on desktop
-- Text overlay: White text with backdrop-blur on bottom-left
+- Large impactful image: Modern eco-worker with digital tablet in clean facility
+- Treatment: Gradient overlay (from-green-900/40 to-green-700/20) for text contrast
+- Dimensions: h-[600px] md:h-[700px], object-cover, subtle zoom on scroll
+- Text placement: Left-aligned, max-w-2xl, white text with subtle backdrop-blur card
 
-**Category Icons**:
-- Use Material Icons or Heroicons via CDN
-- Icons: AC (air-conditioner), refrigerator, washing-machine, iron, etc.
-- Size: w-12 h-12 for category cards
-- Color: Green-600 with light green background circle
+**Category Visuals**:
+- Icon System: Material Icons (CDN), colored gradients, w-16 h-16
+- Background: Soft gradient circle (from-green-100 to-green-50)
+- Hover state: Icon rotates slightly, gradient intensifies
 
 **Supporting Images**:
-- About/How It Works: 2-column layout with images showing pickup process
-- Trust Indicators: Small icons for verified vendors, eco-certified
-- Profile Avatars: Circular, bordered with green ring for active users
+- How It Works: Illustrated 3-step process with subtle animation on scroll
+- Trust Section: Clean photography of verified vendors, eco-certifications
+- Testimonials: Customer photos in gradient-bordered circles
+- About: Split layout - text left, environmental impact photo right
 
-**Image Strategy**:
-- Hero: Yes, impactful environmental image establishing purpose
-- Categories: Icon-based, no photos (faster loading)
-- Vendor Profiles: Profile photos in circles
-- Booking Confirmation: Success illustration (can be SVG)
+## Page Architecture
 
-## Page-Specific Layouts
+**Landing Page** (7 sections):
+1. **Hero**: Full-width gradient overlay image, headline + subheading, dual CTA buttons (Book Now primary, Learn More secondary)
+2. **Impact Stats**: 4-column grid, animated counters, gradient accent cards
+3. **How It Works**: 3-step illustrated timeline with icons, gradient connecting lines
+4. **Categories**: 3-column grid (4 on xl), hover-lift cards with gradient borders
+5. **Benefits**: 2-column feature showcase, icons + descriptions, alternating image/text
+6. **Trust & Social Proof**: Vendor network visualization, customer testimonials carousel
+7. **CTA Footer**: Gradient background, centered message, app store badges
 
-**Landing Page** (5-6 sections):
-1. Hero with image + CTA "Book Pickup Now"
-2. How It Works - 3 steps timeline
-3. Categories grid - 3 cols desktop, 2 cols tablet
-4. Benefits - Why choose eBhangar (eco-friendly stats)
-5. Vendor network map/illustration
-6. Footer with quick links
-
-**Dashboard** (Role-based):
-- Customer: Greeting, quick book button, recent bookings, earnings summary
-- Admin: Stats cards (total bookings, pending, completed), assignment queue
-- Vendor: Assigned pickups list, navigation map, earnings
+**Dashboard Layouts**:
+- Customer: Greeting with avatar, quick book gradient button, earnings card with chart, recent bookings table
+- Admin: 4-stat cards top row, pending queue with filters, assignment interface
+- Vendor: Map view with route, upcoming pickups list, daily earnings gradient card
 
 **Booking Flow**:
-- Step 1: Category selection (grid cards)
-- Step 2: Quantity input (item-by-item with +/- controls)
-- Step 3: Review & estimate (summary card with green price highlight)
-- Step 4: Confirmation with WhatsApp link button
+- Progressive disclosure: Each step slides in from right, previous step fades left
+- Step 1: Category grid with search, selected state has gradient border glow
+- Step 2: Item list with image thumbnails, smooth +/- quantity animations
+- Step 3: Summary card with gradient background, price breakdown, WhatsApp CTA
+- Step 4: Success animation (checkmark expand), booking details card, share options
 
-**Category Selection**:
-- 3-column grid on desktop (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
-- Each card: Icon, name, base rate, "Select" button
-- Selected state: Green border-2, checkmark icon
+**Mobile Optimization**:
+- Bottom navigation: Floating pill with blur, 4 icons with smooth active indicator
+- Swipeable cards: Horizontal scroll for categories/bookings
+- Thumb-friendly zones: CTAs in lower third, critical actions easily reachable
+- Gesture feedback: Subtle vibration on interactions, visual ripple effects
