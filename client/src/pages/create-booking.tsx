@@ -109,20 +109,6 @@ export default function CreateBooking() {
         description: isEditMode ? "Your booking has been updated successfully!" : "Your pickup has been scheduled successfully!",
       });
       
-      // Generate WhatsApp message only for new bookings
-      if (!isEditMode) {
-        const totalValue = Object.values(selectedItems).reduce((sum, item) => sum + item.value, 0);
-        const itemsList = Object.values(selectedItems)
-          .map(item => `${item.categoryName} x${item.quantity}`)
-          .join(", ");
-        
-        const adminPhone = "+919999999999"; // Admin WhatsApp number
-        const message = `New Booking!\n\nCustomer: ${customerName}\nPhone: ${customerPhone}\nAddress: ${customerAddress}\n\nItems: ${itemsList}\n\nTotal Value: ₹${totalValue}\n\nPlease assign a vendor.`;
-        
-        const whatsappUrl = `https://wa.me/${adminPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-      }
-      
       setLocation("/dashboard");
     },
     onError: (error: any) => {
