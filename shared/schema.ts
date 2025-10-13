@@ -29,6 +29,8 @@ export const vendors = pgTable("vendors", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   location: text("location").notNull(),
   pinCode: text("pin_code"),
+  aadharNumber: text("aadhar_number"),
+  panNumber: text("pan_number"),
   active: boolean("active").notNull().default(true),
   activePickups: integer("active_pickups").default(0),
   createdAt: timestamp("created_at").defaultNow(),
