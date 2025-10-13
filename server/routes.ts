@@ -35,16 +35,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/users/me", authenticateUser, async (req, res) => {
     try {
-      const { name, address } = req.body;
+      const { name, address, pinCode, district, state } = req.body;
       const currentUser = await storage.getUser(req.user!.id);
       
       if (!currentUser) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // For now, we'll return the user as-is since we don't have an update method
-      // TODO: Add updateUser method to storage
-      res.json(currentUser);
+      // Validate required fields
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: "Name is required" });
+      }
+      if (!address || !address.trim()) {
+        return res.status(400).json({ error: "Address is required" });
+      }
+      const trimmedPinCode = pinCode?.trim() || "";
+      if (!trimmedPinCode || !/^\d{6}$/.test(trimmedPinCode)) {
+        return res.status(400).json({ error: "Valid 6-digit pin code is required" });
+      }
+      if (!district || !district.trim()) {
+        return res.status(400).json({ error: "District is required" });
+      }
+      if (!state || !state.trim()) {
+        return res.status(400).json({ error: "State is required" });
+      }
+
+      const updatedUser = await storage.updateUser(req.user!.id, {
+        name: name.trim(),
+        address: address.trim(),
+        pinCode: pinCode.trim(),
+        district: district.trim(),
+        state: state.trim()
+      });
+
+      res.json(updatedUser);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -147,6 +171,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { customerName, customerPhone, customerAddress, pinCode, district, state, items, totalValue } = req.body;
       
+      // Validate required customer details
+      if (!customerName || !customerName.trim()) {
+        return res.status(400).json({ error: "Customer name is required" });
+      }
+      if (!customerPhone || !customerPhone.trim()) {
+        return res.status(400).json({ error: "Customer phone is required" });
+      }
+      if (!customerAddress || !customerAddress.trim()) {
+        return res.status(400).json({ error: "Customer address is required" });
+      }
+      const bookingPinCode = pinCode?.trim() || "";
+      if (!bookingPinCode || !/^\d{6}$/.test(bookingPinCode)) {
+        return res.status(400).json({ error: "Valid 6-digit pin code is required" });
+      }
+      if (!district || !district.trim()) {
+        return res.status(400).json({ error: "District is required" });
+      }
+      if (!state || !state.trim()) {
+        return res.status(400).json({ error: "State is required" });
+      }
+      
       if (!items || items.length === 0) {
         return res.status(400).json({ error: "At least one item is required" });
       }
@@ -154,12 +199,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const booking = await storage.createBooking(
         {
           customerId: req.user!.id,
-          customerName,
-          customerPhone,
-          customerAddress,
-          pinCode,
-          district,
-          state,
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          customerAddress: customerAddress.trim(),
+          pinCode: pinCode.trim(),
+          district: district.trim(),
+          state: state.trim(),
           totalValue: totalValue.toString()
         },
         items

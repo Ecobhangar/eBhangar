@@ -45,19 +45,11 @@ export default function CreateBooking() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [addressType, setAddressType] = useState<"saved" | "new">("saved");
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState(user?.phoneNumber || "");
-  const [customerAddress, setCustomerAddress] = useState("");
-  const [pinCode, setPinCode] = useState("");
-  const [district, setDistrict] = useState("");
-  const [state, setState] = useState("");
-  
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [currentCategoryId, setCurrentCategoryId] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("1");
 
-  const { data: userProfile } = useQuery<UserProfile>({
+  const { data: userProfile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: ["/api/users/me"],
     enabled: !!user,
   });
@@ -66,24 +58,8 @@ export default function CreateBooking() {
     queryKey: ["/api/categories"],
   });
 
-  // Auto-fill customer details when address type changes
-  useEffect(() => {
-    if (addressType === "saved" && userProfile) {
-      setCustomerName(userProfile.name || "");
-      setCustomerPhone(userProfile.phoneNumber);
-      setCustomerAddress(userProfile.address || "");
-      setPinCode(userProfile.pinCode || "");
-      setDistrict(userProfile.district || "");
-      setState(userProfile.state || "");
-    } else if (addressType === "new") {
-      setCustomerName("");
-      setCustomerPhone("");
-      setCustomerAddress("");
-      setPinCode("");
-      setDistrict("");
-      setState("");
-    }
-  }, [addressType, userProfile]);
+  // Check if user has saved address
+  const hasAddress = userProfile?.address && userProfile?.pinCode && userProfile?.district && userProfile?.state;
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -143,10 +119,10 @@ export default function CreateBooking() {
   const totalValue = selectedItems.reduce((sum, item) => sum + item.value, 0);
 
   const handleSubmit = () => {
-    if (!customerName || !customerPhone || !customerAddress || !pinCode || !district || !state) {
+    if (!hasAddress) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all customer details",
+        title: "Missing Profile Information",
+        description: "Please update your profile with address details first",
         variant: "destructive",
       });
       return;
@@ -162,12 +138,12 @@ export default function CreateBooking() {
     }
 
     createBookingMutation.mutate({
-      customerName,
-      customerPhone,
-      customerAddress,
-      pinCode,
-      district,
-      state,
+      customerName: userProfile?.name || "",
+      customerPhone: userProfile?.phoneNumber || "",
+      customerAddress: userProfile?.address || "",
+      pinCode: userProfile?.pinCode || "",
+      district: userProfile?.district || "",
+      state: userProfile?.state || "",
       totalValue,
       items: selectedItems,
     });
@@ -192,120 +168,57 @@ export default function CreateBooking() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold font-[Poppins] mb-2">Create New Booking</h1>
-        <p className="text-muted-foreground mb-8">Fill in your details and select scrap items</p>
+        <p className="text-muted-foreground mb-8">Select scrap items for pickup</p>
 
-        <div className="space-y-8">
-          {/* Step 1: Customer Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Address Type Selection */}
-              <div className="space-y-3">
-                <Label>Pickup Address</Label>
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant={addressType === "saved" ? "default" : "outline"}
-                    onClick={() => setAddressType("saved")}
-                    disabled={!userProfile?.address}
-                    data-testid="button-saved-address"
-                    className="flex-1"
-                  >
-                    Use Saved Address
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={addressType === "new" ? "default" : "outline"}
-                    onClick={() => setAddressType("new")}
-                    data-testid="button-new-address"
-                    className="flex-1"
-                  >
-                    New Pickup Address
-                  </Button>
-                </div>
-                {!userProfile?.address && (
-                  <p className="text-sm text-muted-foreground">No saved address found. Please enter new pickup address.</p>
-                )}
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    data-testid="input-customer-name"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Enter your name"
-                    disabled={addressType === "saved"}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone *</Label>
-                  <Input
-                    id="phone"
-                    data-testid="input-customer-phone"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="Enter phone number"
-                    disabled={addressType === "saved"}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Address *</Label>
-                <Textarea
-                  id="address"
-                  data-testid="input-customer-address"
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  placeholder="Enter your complete address"
-                  rows={3}
-                  disabled={addressType === "saved"}
-                />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="pincode">Pin Code *</Label>
-                  <Input
-                    id="pincode"
-                    data-testid="input-pin-code"
-                    value={pinCode}
-                    onChange={(e) => setPinCode(e.target.value)}
-                    placeholder="Enter pin code"
-                    maxLength={6}
-                    disabled={addressType === "saved"}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="district">District *</Label>
-                  <Input
-                    id="district"
-                    data-testid="input-district"
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="Enter district"
-                    disabled={addressType === "saved"}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
-                    data-testid="input-state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    placeholder="Enter state"
-                    disabled={addressType === "saved"}
-                  />
-                </div>
+        {profileLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        ) : !hasAddress ? (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <h3 className="text-lg font-semibold text-destructive">Profile Incomplete</h3>
+                <p className="text-muted-foreground">
+                  Please update your profile with address details before creating a booking.
+                </p>
+                <Button onClick={() => setLocation("/profile")} data-testid="button-go-to-profile">
+                  Go to Profile
+                </Button>
               </div>
             </CardContent>
           </Card>
+        ) : (
+          <div className="space-y-8">
+            {/* Pickup Address Display */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Pickup Address</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setLocation("/profile")}
+                    data-testid="button-edit-profile"
+                  >
+                    Edit Profile
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="font-medium">{userProfile?.name}</p>
+                  <p className="text-sm text-muted-foreground">{userProfile?.phoneNumber}</p>
+                </div>
+                <div className="text-sm">
+                  <p>{userProfile?.address}</p>
+                  <p className="text-muted-foreground">
+                    {userProfile?.district}, {userProfile?.state} - {userProfile?.pinCode}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
           {/* Step 2: Select Items */}
           <Card>
@@ -402,20 +315,21 @@ export default function CreateBooking() {
             </CardContent>
           </Card>
 
-          {/* Submit Button */}
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={() => setLocation("/dashboard")} data-testid="button-cancel">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={createBookingMutation.isPending}
-              data-testid="button-submit-booking"
-            >
-              {createBookingMutation.isPending ? "Creating..." : "Submit Booking"}
-            </Button>
+            {/* Submit Button */}
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setLocation("/dashboard")} data-testid="button-cancel">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={createBookingMutation.isPending}
+                data-testid="button-submit-booking"
+              >
+                {createBookingMutation.isPending ? "Creating..." : "Submit Booking"}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

@@ -16,7 +16,8 @@ import {
   Clock, 
   IndianRupee,
   Leaf,
-  Plus
+  Plus,
+  User as UserIcon
 } from "lucide-react";
 
 interface BookingItem {
@@ -180,6 +181,15 @@ export default function Dashboard() {
               {user?.phoneNumber}
             </span>
             <ThemeToggle />
+            <Button 
+              variant="ghost" 
+              onClick={() => setLocation("/profile")} 
+              data-testid="button-profile"
+              className="gap-2"
+            >
+              <UserIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Profile</span>
+            </Button>
             <Button variant="ghost" onClick={handleLogout} data-testid="button-logout">Logout</Button>
           </div>
         </div>

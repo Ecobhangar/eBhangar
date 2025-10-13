@@ -24,6 +24,7 @@ export interface IStorage {
   getUserByPhone(phoneNumber: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserRole(id: string, role: string): Promise<User | undefined>;
+  updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined>;
 
   // Category management
   getAllCategories(): Promise<Category[]>;
@@ -69,6 +70,14 @@ export class DbStorage implements IStorage {
   async updateUserRole(id: string, role: string): Promise<User | undefined> {
     const result = await db.update(users)
       .set({ role })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set(data)
       .where(eq(users.id, id))
       .returning();
     return result[0];

@@ -10,6 +10,7 @@ import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import CreateBooking from "@/pages/create-booking";
+import Profile from "@/pages/profile";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/profile" component={Profile} />
       <Route path="/bookings/new" component={CreateBooking} />
       <Route path="/bookings/edit/:id" component={CreateBooking} />
       <Route component={NotFound} />
