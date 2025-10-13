@@ -186,14 +186,22 @@ Required environment variables:
 - 9 scrap categories seeded (Old AC, Refrigerator, Washing Machine, Iron, Copper, Plastic, Paper, Books, Clothes)
 
 **Customer Features:**
-- **New Booking Flow (Redesigned):**
-  - **Step 1:** Customer details form with saved address feature
-    - **"Use Saved Address":** Auto-fills all fields (name, phone, address, pin code, district, state) from user profile - all fields disabled for consistency
-    - **"New Pickup Address":** Provides empty form for fresh address entry - all fields editable
-    - Button disabled if no saved address exists in profile
-  - **Step 2:** Category selection via dropdown with quantity input
-  - Auto-calculated estimated value displayed prominently before submission
-  - "New Booking" button on customer dashboard for easy access
+- **Profile Management:**
+  - Dedicated Profile page to save address details (name, address, pin code, district, state)
+  - Accessible via "Profile" button in dashboard header
+  - Required before creating any booking
+  - Backend validation ensures:
+    - All fields are non-empty
+    - Pin code is exactly 6 numeric digits (regex: `/^\d{6}$/`)
+    - Data integrity across platform
+- **Simplified Booking Flow:**
+  - Automatically uses saved profile address for pickup
+  - No repetitive address entry on booking page
+  - If profile incomplete, redirects to Profile page with clear message
+  - **Category Selection:** Dropdown with quantity input
+  - Auto-calculated estimated value displayed before submission
+  - "New Booking" button on customer dashboard
+  - Can edit profile anytime via "Edit Profile" button on booking page
 - View personal booking history
 - **Status-based actions:**
   - **Pending bookings:** Edit and Delete options available
@@ -228,10 +236,11 @@ Required environment variables:
 ### 🎯 How to Use the Application
 
 1. **Login:** Navigate to `/login` and authenticate with phone number + OTP
-2. **Create Booking:** Go to `/bookings/new` to schedule a pickup
-3. **View Dashboard:** Access `/dashboard` for role-specific features
-4. **Admin Actions:** Assign vendors to pending bookings
-5. **Vendor Actions:** Mark assigned pickups as completed
+2. **Setup Profile:** (First-time users) Go to `/profile` from dashboard and save your address details
+3. **Create Booking:** Go to `/bookings/new` to schedule a pickup (uses saved profile address automatically)
+4. **View Dashboard:** Access `/dashboard` for role-specific features
+5. **Admin Actions:** Assign vendors to pending bookings based on pin code
+6. **Vendor Actions:** Mark assigned pickups as completed
 
 ### 📧 Notification System
 
