@@ -78,9 +78,10 @@ The storage pattern implements a repository/interface pattern:
    - Supports dynamic pricing ranges
 
 3. **vendors** - Vendor profiles linked to user accounts
-   - Fields: id, userId (FK to users), location, pinCode, activePickups counter
+   - Fields: id, userId (FK to users), location, pinCode, active (boolean), activePickups counter
    - One-to-one relationship with users
    - pinCode field enables location-based vendor assignment
+   - active flag controls vendor availability (default: true)
 
 4. **bookings** - Customer orders/pickup requests
    - Fields: id, customerId (FK), customer details (denormalized: name, phone, address, pinCode, district, state), totalValue, status, vendorId (FK)
@@ -225,6 +226,15 @@ Required environment variables:
   - Completed bookings show "Completed by: [Vendor Name] • [Phone]"
   - Backend automatically fetches vendor details with all bookings
 - Manage vendor assignments
+- **Vendor Onboarding System:**
+  - Dedicated vendor onboarding form at `/admin/vendors/onboard`
+  - Create new vendors with complete details
+  - Form fields: Vendor Name, Phone Number, Area/Locality, Pincode
+  - Active/Inactive status toggle (default: Active)
+  - Automatic user account creation with vendor role
+  - Duplicate phone number validation
+  - Success confirmation with auto-redirect
+  - "Add Vendor" button in admin dashboard
 - **Email Notifications:** Automatic email alerts for new bookings (optional setup)
   - Admin WhatsApp: +919226255355 (displayed in emails)
   - Configure SMTP in Replit Secrets (see EMAIL_SETUP.md)
