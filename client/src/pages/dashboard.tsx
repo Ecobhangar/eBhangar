@@ -37,6 +37,7 @@ interface Booking {
   status: "pending" | "assigned" | "completed";
   createdAt: string;
   items: BookingItem[];
+  vendor?: { name: string; phone: string };
 }
 
 interface Vendor {
@@ -245,6 +246,7 @@ export default function Dashboard() {
                       status={booking.status}
                       date={new Date(booking.createdAt)}
                       showActions={true}
+                      vendorInfo={booking.vendor}
                       onDelete={handleDeleteBooking}
                       onEdit={handleEditBooking}
                       onCancel={handleCancelBooking}
@@ -304,8 +306,10 @@ export default function Dashboard() {
                         isAdmin={true}
                         vendors={filteredVendors.map(v => ({ 
                           id: v.id, 
-                          name: v.user.name || v.user.phoneNumber 
+                          name: v.user.name || v.user.phoneNumber,
+                          phone: v.user.phoneNumber
                         }))}
+                        vendorInfo={booking.vendor}
                         onAssignVendor={(bookingId, vendorId) => {
                           assignVendorMutation.mutate({ bookingId, vendorId });
                         }}
@@ -346,6 +350,7 @@ export default function Dashboard() {
                       totalValue={parseFloat(booking.totalValue)}
                       status={booking.status}
                       date={new Date(booking.createdAt)}
+                      vendorInfo={booking.vendor}
                     />
                     <Button 
                       className="mt-2 w-full"

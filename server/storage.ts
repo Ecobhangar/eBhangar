@@ -152,8 +152,11 @@ export class DbStorage implements IStorage {
           .leftJoin(users, eq(vendors.userId, users.id))
           .where(eq(vendors.id, booking.vendorId));
           
-          if (vendorResult.length > 0 && vendorResult[0].name && vendorResult[0].phone) {
-            vendor = { name: vendorResult[0].name, phone: vendorResult[0].phone };
+          if (vendorResult.length > 0 && vendorResult[0].phone) {
+            vendor = { 
+              name: vendorResult[0].name || vendorResult[0].phone, 
+              phone: vendorResult[0].phone 
+            };
           }
         }
         
@@ -184,8 +187,11 @@ export class DbStorage implements IStorage {
           .leftJoin(users, eq(vendors.userId, users.id))
           .where(eq(vendors.id, booking.vendorId));
           
-          if (vendorResult.length > 0 && vendorResult[0].name && vendorResult[0].phone) {
-            vendor = { name: vendorResult[0].name, phone: vendorResult[0].phone };
+          if (vendorResult.length > 0 && vendorResult[0].phone) {
+            vendor = { 
+              name: vendorResult[0].name || vendorResult[0].phone, 
+              phone: vendorResult[0].phone 
+            };
           }
         }
         
@@ -216,8 +222,11 @@ export class DbStorage implements IStorage {
           .leftJoin(users, eq(vendors.userId, users.id))
           .where(eq(vendors.id, booking.vendorId));
           
-          if (vendorResult.length > 0 && vendorResult[0].name && vendorResult[0].phone) {
-            vendor = { name: vendorResult[0].name, phone: vendorResult[0].phone };
+          if (vendorResult.length > 0 && vendorResult[0].phone) {
+            vendor = { 
+              name: vendorResult[0].name || vendorResult[0].phone, 
+              phone: vendorResult[0].phone 
+            };
           }
         }
         
