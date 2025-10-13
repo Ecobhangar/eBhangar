@@ -118,6 +118,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vendor onboarding - creates both user and vendor
+  app.post("/api/admin/vendors/onboard", authenticateUser, requireRole("admin"), async (req, res) => {
+    try {
+      const { name, phoneNumber, location, pinCode, active } = req.body;
+
+      // Validate required fields
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: "Vendor name is required" });
+      }
+      if (!phoneNumber || !phoneNumber.trim()) {
+        return res.status(400).json({ error: "Phone number is required" });
+      }
+      if (!location || !location.trim()) {
+        return res.status(400).json({ error: "Area/Locality is required" });
+      }
+      const trimmedPinCode = pinCode?.trim() || "";
+      if (!trimmedPinCode || !/^\d{6}$/.test(trimmedPinCode)) {
+        return res.status(400).json({ error: "Valid 6-digit pin code is required" });
+      }
+
+      // Check if user with phone already exists
+      const existingUser = await storage.getUserByPhone(phoneNumber.trim());
+      if (existingUser) {
+        return res.status(400).json({ error: "A user with this phone number already exists" });
+      }
+
+      // Create user with vendor role
+      const user = await storage.createUser({
+        phoneNumber: phoneNumber.trim(),
+        name: name.trim(),
+        pinCode: trimmedPinCode,
+        role: "vendor"
+      });
+
+      // Create vendor profile
+      const vendor = await storage.createVendor({
+        userId: user.id,
+        location: location.trim(),
+        pinCode: trimmedPinCode,
+        active: active !== undefined ? active : true
+      });
+
+      res.json({ user, vendor });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // Booking routes
   app.get("/api/bookings", authenticateUser, async (req, res) => {
     try {
