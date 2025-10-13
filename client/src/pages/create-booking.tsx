@@ -1,31 +1,17 @@
-import { useState, useEffect } from "react";
-import { useLocation, useRoute } from "wouter";
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import { QuantitySelector } from "@/components/QuantitySelector";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Leaf, Check } from "lucide-react";
-import { 
-  AirVent, 
-  Refrigerator, 
-  WashingMachine, 
-  Shirt, 
-  CircuitBoard,
-  Trash2,
-  FileText,
-  BookOpen
-} from "lucide-react";
-
-const iconMap: Record<string, any> = {
-  AirVent, Refrigerator, WashingMachine, Shirt, CircuitBoard, Trash2, FileText, BookOpen
-};
+import { Leaf, Plus, Trash2 } from "lucide-react";
 
 interface CategoryType {
   id: string;
@@ -46,69 +32,35 @@ interface SelectedItem {
 
 export default function CreateBooking() {
   const [, setLocation] = useLocation();
-  const [, params] = useRoute("/bookings/edit/:id");
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const bookingId = params?.id;
-  const isEditMode = !!bookingId;
-  
-  const [selectedItems, setSelectedItems] = useState<Record<string, SelectedItem>>({});
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState(user?.phoneNumber || "");
   const [customerAddress, setCustomerAddress] = useState("");
+  const [pinCode, setPinCode] = useState("");
+  const [district, setDistrict] = useState("");
+  const [state, setState] = useState("");
+  
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [currentCategoryId, setCurrentCategoryId] = useState("");
+  const [currentQuantity, setCurrentQuantity] = useState("1");
 
   const { data: categories = [], isLoading } = useQuery<CategoryType[]>({
     queryKey: ["/api/categories"],
   });
 
-  const { data: existingBooking } = useQuery<any>({
-    queryKey: ["/api/bookings", bookingId],
-    queryFn: async () => {
-      const res = await apiRequest("GET", `/api/bookings/${bookingId}`, {});
-      return res.json();
-    },
-    enabled: isEditMode && !!bookingId,
-  });
-
-  useEffect(() => {
-    if (existingBooking && isEditMode) {
-      setCustomerName(existingBooking.customerName || "");
-      setCustomerPhone(existingBooking.customerPhone || "");
-      setCustomerAddress(existingBooking.customerAddress || "");
-      
-      const items: Record<string, SelectedItem> = {};
-      (existingBooking.items || []).forEach((item: any) => {
-        const category = categories.find(c => c.id === item.categoryId);
-        if (category) {
-          const avgRate = (parseFloat(category.minRate) + parseFloat(category.maxRate)) / 2;
-          items[item.categoryId] = {
-            categoryId: item.categoryId,
-            categoryName: item.categoryName,
-            quantity: item.quantity,
-            rate: avgRate,
-            value: avgRate * item.quantity
-          };
-        }
-      });
-      setSelectedItems(items);
-    }
-  }, [existingBooking, isEditMode, categories]);
-
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
-      const method = isEditMode ? "PATCH" : "POST";
-      const url = isEditMode ? `/api/bookings/${bookingId}` : "/api/bookings";
-      const res = await apiRequest(method, url, data);
+      const res = await apiRequest("POST", "/api/bookings", data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
       toast({
-        title: isEditMode ? "Booking Updated" : "Booking Created",
-        description: isEditMode ? "Your booking has been updated successfully!" : "Your pickup has been scheduled successfully!",
+        title: "Booking Created",
+        description: "Your pickup has been scheduled successfully!",
       });
-      
       setLocation("/dashboard");
     },
     onError: (error: any) => {
@@ -120,56 +72,55 @@ export default function CreateBooking() {
     },
   });
 
-  const toggleCategory = (category: CategoryType) => {
-    if (selectedItems[category.id]) {
-      const newItems = { ...selectedItems };
-      delete newItems[category.id];
-      setSelectedItems(newItems);
-    } else {
-      const avgRate = (parseFloat(category.minRate) + parseFloat(category.maxRate)) / 2;
-      setSelectedItems({
-        ...selectedItems,
-        [category.id]: {
-          categoryId: category.id,
-          categoryName: category.name,
-          quantity: 1,
-          rate: avgRate,
-          value: avgRate,
-        },
-      });
-    }
-  };
-
-  const updateQuantity = (categoryId: string, quantity: number) => {
-    if (selectedItems[categoryId]) {
-      const item = selectedItems[categoryId];
-      setSelectedItems({
-        ...selectedItems,
-        [categoryId]: {
-          ...item,
-          quantity,
-          value: item.rate * quantity,
-        },
-      });
-    }
-  };
-
-  const totalValue = Object.values(selectedItems).reduce((sum, item) => sum + item.value, 0);
-
-  const handleSubmit = () => {
-    if (!customerName || !customerPhone || !customerAddress) {
+  const addItem = () => {
+    if (!currentCategoryId || !currentQuantity) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields",
+        description: "Please select a category and quantity",
         variant: "destructive",
       });
       return;
     }
 
-    if (Object.keys(selectedItems).length === 0) {
+    const category = categories.find(c => c.id === currentCategoryId);
+    if (!category) return;
+
+    const avgRate = (parseFloat(category.minRate) + parseFloat(category.maxRate)) / 2;
+    const quantity = parseInt(currentQuantity);
+    const value = avgRate * quantity;
+
+    setSelectedItems([...selectedItems, {
+      categoryId: category.id,
+      categoryName: category.name,
+      quantity,
+      rate: avgRate,
+      value
+    }]);
+
+    setCurrentCategoryId("");
+    setCurrentQuantity("1");
+  };
+
+  const removeItem = (index: number) => {
+    setSelectedItems(selectedItems.filter((_, i) => i !== index));
+  };
+
+  const totalValue = selectedItems.reduce((sum, item) => sum + item.value, 0);
+
+  const handleSubmit = () => {
+    if (!customerName || !customerPhone || !customerAddress || !pinCode || !district || !state) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all customer details",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedItems.length === 0) {
       toast({
         title: "No Items Selected",
-        description: "Please select at least one item",
+        description: "Please add at least one item",
         variant: "destructive",
       });
       return;
@@ -179,8 +130,11 @@ export default function CreateBooking() {
       customerName,
       customerPhone,
       customerAddress,
+      pinCode,
+      district,
+      state,
       totalValue,
-      items: Object.values(selectedItems),
+      items: selectedItems,
     });
   };
 
@@ -194,143 +148,202 @@ export default function CreateBooking() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <Button variant="ghost" onClick={() => setLocation("/dashboard")}>
+            <Button variant="ghost" onClick={() => setLocation("/dashboard")} data-testid="button-back-dashboard">
               Back to Dashboard
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold font-[Poppins] mb-2">{isEditMode ? "Edit Booking" : "Create New Booking"}</h1>
-        <p className="text-muted-foreground mb-8">{isEditMode ? "Update your booking details" : "Select items and schedule your scrap pickup"}</p>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold font-[Poppins] mb-2">Create New Booking</h1>
+        <p className="text-muted-foreground mb-8">Fill in your details and select scrap items</p>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Select Items</h2>
-              {isLoading ? (
-                <p>Loading categories...</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {categories.map((category) => {
-                    const Icon = iconMap[category.icon] || CircuitBoard;
-                    const isSelected = !!selectedItems[category.id];
-                    
-                    return (
-                      <Card
-                        key={category.id}
-                        className={`p-4 cursor-pointer hover-elevate active-elevate-2 ${
-                          isSelected ? "border-2 border-primary" : ""
-                        }`}
-                        onClick={() => toggleCategory(category)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Icon className="w-6 h-6 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-semibold">{category.name}</h3>
-                              {isSelected && <Check className="w-5 h-5 text-primary" />}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              ₹{category.minRate}-{category.maxRate}/{category.unit}
-                            </p>
-                            {isSelected && (
-                              <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-                                <QuantitySelector
-                                  value={selectedItems[category.id].quantity}
-                                  onChange={(q) => updateQuantity(category.id, q)}
-                                  min={1}
-                                  max={100}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Contact Details</h2>
-              <Card className="p-6 space-y-4">
-                <div>
-                  <Label htmlFor="name">Full Name *</Label>
+        <div className="space-y-8">
+          {/* Step 1: Customer Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name *</Label>
                   <Input
                     id="name"
+                    data-testid="input-customer-name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Enter your name"
-                    className="mt-2"
-                    data-testid="input-customer-name"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone *</Label>
                   <Input
                     id="phone"
+                    data-testid="input-customer-phone"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="mt-2"
-                    data-testid="input-customer-phone"
+                    placeholder="Enter phone number"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="address">Pickup Address *</Label>
-                  <Textarea
-                    id="address"
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    placeholder="Enter complete address"
-                    className="mt-2"
-                    rows={3}
-                    data-testid="input-customer-address"
-                  />
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          <div>
-            <Card className="p-6 sticky top-24">
-              <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
-              
-              {Object.keys(selectedItems).length === 0 ? (
-                <p className="text-muted-foreground text-sm">No items selected</p>
-              ) : (
-                <div className="space-y-3 mb-6">
-                  {Object.values(selectedItems).map((item) => (
-                    <div key={item.categoryId} className="flex justify-between text-sm">
-                      <span>{item.categoryName} x{item.quantity}</span>
-                      <span className="font-medium">₹{item.value.toFixed(0)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="border-t pt-4 mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">Total Value</span>
-                  <span className="text-2xl font-bold text-primary">₹{totalValue.toFixed(0)}</span>
                 </div>
               </div>
 
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleSubmit}
-                disabled={createBookingMutation.isPending || Object.keys(selectedItems).length === 0}
-                data-testid="button-confirm-booking"
-              >
-                {createBookingMutation.isPending ? "Creating..." : "Confirm Booking"}
-              </Button>
-            </Card>
+              <div className="space-y-2">
+                <Label htmlFor="address">Address *</Label>
+                <Textarea
+                  id="address"
+                  data-testid="input-customer-address"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  placeholder="Enter your complete address"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="pincode">Pin Code *</Label>
+                  <Input
+                    id="pincode"
+                    data-testid="input-pin-code"
+                    value={pinCode}
+                    onChange={(e) => setPinCode(e.target.value)}
+                    placeholder="Enter pin code"
+                    maxLength={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="district">District *</Label>
+                  <Input
+                    id="district"
+                    data-testid="input-district"
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                    placeholder="Enter district"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State *</Label>
+                  <Input
+                    id="state"
+                    data-testid="input-state"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    placeholder="Enter state"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Step 2: Select Items */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Select Scrap Items</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-4 items-end">
+                <div className="flex-1 space-y-2">
+                  <Label>Category *</Label>
+                  <Select value={currentCategoryId} onValueChange={setCurrentCategoryId}>
+                    <SelectTrigger data-testid="select-category">
+                      <SelectValue placeholder="Select scrap category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name} (₹{category.minRate}-₹{category.maxRate}/{category.unit})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="w-32 space-y-2">
+                  <Label>Quantity *</Label>
+                  <Input
+                    type="number"
+                    data-testid="input-quantity"
+                    min="1"
+                    value={currentQuantity}
+                    onChange={(e) => setCurrentQuantity(e.target.value)}
+                    placeholder="Qty"
+                  />
+                </div>
+
+                <div className="w-48 space-y-2">
+                  <Label>Estimated Value</Label>
+                  <div className="h-10 px-3 py-2 bg-muted rounded-md flex items-center font-semibold text-primary" data-testid="text-estimated-value">
+                    {currentCategoryId && currentQuantity ? (
+                      `₹${(() => {
+                        const cat = categories.find(c => c.id === currentCategoryId);
+                        if (!cat) return 0;
+                        const avg = (parseFloat(cat.minRate) + parseFloat(cat.maxRate)) / 2;
+                        return (avg * parseInt(currentQuantity || "0")).toFixed(2);
+                      })()}`
+                    ) : (
+                      "₹0.00"
+                    )}
+                  </div>
+                </div>
+
+                <Button onClick={addItem} data-testid="button-add-item">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+
+              {/* Selected Items List */}
+              {selectedItems.length > 0 && (
+                <div className="mt-6 space-y-2">
+                  <Label>Added Items</Label>
+                  <div className="border rounded-md divide-y">
+                    {selectedItems.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3" data-testid={`item-${index}`}>
+                        <div className="flex-1">
+                          <p className="font-medium">{item.categoryName}</p>
+                          <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <p className="font-semibold text-primary">₹{item.value.toFixed(2)}</p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeItem(index)}
+                            data-testid={`button-remove-item-${index}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Total */}
+              {selectedItems.length > 0 && (
+                <div className="flex justify-between items-center p-4 bg-primary/10 rounded-md">
+                  <p className="text-lg font-semibold">Total Estimated Value</p>
+                  <p className="text-2xl font-bold text-primary" data-testid="text-total-value">₹{totalValue.toFixed(2)}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Submit Button */}
+          <div className="flex justify-end gap-4">
+            <Button variant="outline" onClick={() => setLocation("/dashboard")} data-testid="button-cancel">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={createBookingMutation.isPending}
+              data-testid="button-submit-booking"
+            >
+              {createBookingMutation.isPending ? "Creating..." : "Submit Booking"}
+            </Button>
           </div>
         </div>
       </main>

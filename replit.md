@@ -81,9 +81,10 @@ The storage pattern implements a repository/interface pattern:
    - One-to-one relationship with users
 
 4. **bookings** - Customer orders/pickup requests
-   - Fields: id, customerId (FK), customer details (denormalized), totalValue, status, vendorId (FK)
+   - Fields: id, customerId (FK), customer details (denormalized: name, phone, address, pinCode, district, state), totalValue, status, vendorId (FK)
    - Status workflow: pending → assigned → completed
    - Tracks timestamps for creation and completion
+   - Location fields (pinCode, district, state) nullable for backward compatibility
 
 5. **bookingItems** - Line items for each booking
    - Fields: id, bookingId (FK), categoryId (FK), categoryName (denormalized), quantity, estimatedValue
@@ -183,9 +184,11 @@ Required environment variables:
 - 9 scrap categories seeded (Old AC, Refrigerator, Washing Machine, Iron, Copper, Plastic, Paper, Books, Clothes)
 
 **Customer Features:**
-- Cart-like booking experience: Select items, see total estimated value, then confirm
-- Quantity adjustment with +/- buttons
-- Real-time price calculation based on average category rates
+- **New Booking Flow (Redesigned):**
+  - **Step 1:** Customer details form - name, address, pin code, district, state
+  - **Step 2:** Category selection via dropdown with quantity input
+  - Auto-calculated estimated value displayed prominently before submission
+  - Removed "New Booking" button from dashboard (customers use direct URL /bookings/new)
 - View personal booking history
 - **Status-based actions:**
   - **Pending bookings:** Edit and Delete options available

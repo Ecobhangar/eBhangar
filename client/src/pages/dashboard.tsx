@@ -190,15 +190,9 @@ export default function Dashboard() {
           </TabsList>
 
           <TabsContent value="customer" className="space-y-8">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold font-[Poppins]">My Dashboard</h1>
-                <p className="text-muted-foreground mt-1">Track your bookings and earnings</p>
-              </div>
-              <Button onClick={() => setLocation("/bookings/new")} data-testid="button-new-booking">
-                <Plus className="w-4 h-4 mr-2" />
-                New Booking
-              </Button>
+            <div>
+              <h1 className="text-3xl font-bold font-[Poppins]">My Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Track your bookings and earnings</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

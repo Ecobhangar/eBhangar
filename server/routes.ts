@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bookings", authenticateUser, async (req, res) => {
     try {
-      const { customerName, customerPhone, customerAddress, items, totalValue } = req.body;
+      const { customerName, customerPhone, customerAddress, pinCode, district, state, items, totalValue } = req.body;
       
       if (!items || items.length === 0) {
         return res.status(400).json({ error: "At least one item is required" });
@@ -157,6 +157,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerName,
           customerPhone,
           customerAddress,
+          pinCode,
+          district,
+          state,
           totalValue: totalValue.toString()
         },
         items
