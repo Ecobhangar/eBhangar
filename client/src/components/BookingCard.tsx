@@ -20,6 +20,7 @@ interface BookingCardProps {
   totalValue: number;
   status: "pending" | "assigned" | "completed";
   date: Date;
+  completedAt?: Date | null;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
   onCancel?: (id: string) => void;
@@ -36,7 +37,7 @@ const statusConfig = {
   completed: { color: "bg-primary text-primary-foreground", label: "Completed" },
 };
 
-export function BookingCard({ id, customerName, phone, address, items, totalValue, status, date, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false, vendorInfo }: BookingCardProps) {
+export function BookingCard({ id, customerName, phone, address, items, totalValue, status, date, completedAt, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false, vendorInfo }: BookingCardProps) {
   const config = statusConfig[status];
   
   return (
@@ -101,7 +102,7 @@ export function BookingCard({ id, customerName, phone, address, items, totalValu
           <MapPin className="w-4 h-4 text-muted-foreground" />
           <span data-testid={`text-address-${id}`}>{address}</span>
         </div>
-        {vendorInfo && (status === "assigned" || status === "completed") && (
+        {isAdmin && vendorInfo && (status === "assigned" || status === "completed") && (
           <div className="mt-3 pt-3 border-t">
             <p className="text-xs font-medium text-muted-foreground mb-1">
               {status === "completed" ? "Completed by:" : "Assigned to:"}
@@ -110,6 +111,16 @@ export function BookingCard({ id, customerName, phone, address, items, totalValu
               <Phone className="w-4 h-4 text-primary" />
               <span className="font-medium" data-testid={`text-vendor-name-${id}`}>{vendorInfo.name}</span>
               <span className="text-muted-foreground" data-testid={`text-vendor-phone-${id}`}>• {vendorInfo.phone}</span>
+            </div>
+          </div>
+        )}
+        {!isAdmin && status === "completed" && completedAt && (
+          <div className="mt-3 pt-3 border-t">
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="font-medium text-primary" data-testid={`text-pickup-done-${id}`}>
+                Pickup done on {format(new Date(completedAt), "PPP 'at' p")}
+              </span>
             </div>
           </div>
         )}
