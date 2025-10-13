@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vendor onboarding - creates both user and vendor
   app.post("/api/admin/vendors/onboard", authenticateUser, requireRole("admin"), async (req, res) => {
     try {
-      const { name, phoneNumber, location, pinCode, aadharNumber, panNumber, active } = req.body;
+      const { name, phoneNumber, location, pinCode, district, state, aadharNumber, panNumber, active } = req.body;
 
       // Validate required fields
       if (!name || !name.trim()) {
@@ -136,6 +136,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const trimmedPinCode = pinCode?.trim() || "";
       if (!trimmedPinCode || !/^\d{6}$/.test(trimmedPinCode)) {
         return res.status(400).json({ error: "Valid 6-digit pin code is required" });
+      }
+      if (!district || !district.trim()) {
+        return res.status(400).json({ error: "District is required" });
+      }
+      if (!state || !state.trim()) {
+        return res.status(400).json({ error: "State is required" });
       }
 
       // Validate Aadhar Number (12 digits, optional)
@@ -173,6 +179,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: user.id,
         location: location.trim(),
         pinCode: trimmedPinCode,
+        district: district.trim(),
+        state: state.trim(),
         aadharNumber: aadharNumber?.trim() || null,
         panNumber: panNumber?.trim().toUpperCase() || null,
         active: active !== undefined ? active : true
