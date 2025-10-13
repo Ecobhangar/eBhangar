@@ -207,6 +207,10 @@ Required environment variables:
   - **Pending bookings:** Edit and Delete options available
   - **Assigned bookings:** Cancel option available (returns to pending status)
   - **Completed bookings:** View only, no actions
+- **Privacy Protection:**
+  - Customers do NOT see vendor name or phone number
+  - Completed bookings show: "Pickup done on [date time]"
+  - Vendor details only visible to admin users
 
 **Admin Features:**
 - View all bookings across platform
