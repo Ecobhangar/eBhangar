@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -29,6 +29,7 @@ export const vendors = pgTable("vendors", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   location: text("location").notNull(),
   pinCode: text("pin_code"),
+  active: boolean("active").notNull().default(true),
   activePickups: integer("active_pickups").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
