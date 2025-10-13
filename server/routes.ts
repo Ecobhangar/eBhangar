@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vendor onboarding - creates both user and vendor
   app.post("/api/admin/vendors/onboard", authenticateUser, requireRole("admin"), async (req, res) => {
     try {
-      const { name, phoneNumber, location, pinCode, active } = req.body;
+      const { name, phoneNumber, location, pinCode, aadharNumber, panNumber, active } = req.body;
 
       // Validate required fields
       if (!name || !name.trim()) {
@@ -136,6 +136,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const trimmedPinCode = pinCode?.trim() || "";
       if (!trimmedPinCode || !/^\d{6}$/.test(trimmedPinCode)) {
         return res.status(400).json({ error: "Valid 6-digit pin code is required" });
+      }
+
+      // Validate Aadhar Number (12 digits, optional)
+      if (aadharNumber && aadharNumber.trim()) {
+        const trimmedAadhar = aadharNumber.trim();
+        if (!/^\d{12}$/.test(trimmedAadhar)) {
+          return res.status(400).json({ error: "Aadhar number must be exactly 12 digits" });
+        }
+      }
+
+      // Validate PAN Number (10 alphanumeric characters in format: 5 letters, 4 digits, 1 letter, optional)
+      if (panNumber && panNumber.trim()) {
+        const trimmedPan = panNumber.trim().toUpperCase();
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(trimmedPan)) {
+          return res.status(400).json({ error: "Invalid PAN format. Must be 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)" });
+        }
       }
 
       // Check if user with phone already exists
@@ -157,6 +173,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: user.id,
         location: location.trim(),
         pinCode: trimmedPinCode,
+        aadharNumber: aadharNumber?.trim() || null,
+        panNumber: panNumber?.trim().toUpperCase() || null,
         active: active !== undefined ? active : true
       });
 
