@@ -18,20 +18,22 @@ const vendorOnboardingSchema = z.object({
   phoneNumber: z.string()
     .min(10, "Phone number must be at least 10 digits")
     .regex(/^\d+$/, "Phone number must contain only digits"),
-  location: z.string().min(1, "Area/Locality is required"),
-  pinCode: z.string()
-    .length(6, "Pin code must be exactly 6 digits")
-    .regex(/^\d{6}$/, "Pin code must contain only digits"),
-  aadharNumber: z.string()
-    .optional()
-    .refine((val) => !val || /^\d{12}$/.test(val), {
-      message: "Aadhar number must be exactly 12 digits"
-    }),
   panNumber: z.string()
     .optional()
     .refine((val) => !val || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(val), {
       message: "PAN must be in format: ABCDE1234F (5 letters, 4 digits, 1 letter)"
     }),
+  aadharNumber: z.string()
+    .optional()
+    .refine((val) => !val || /^\d{12}$/.test(val), {
+      message: "Aadhar number must be exactly 12 digits"
+    }),
+  location: z.string().min(1, "Area/Locality is required"),
+  pinCode: z.string()
+    .length(6, "Pin code must be exactly 6 digits")
+    .regex(/^\d{6}$/, "Pin code must contain only digits"),
+  district: z.string().min(1, "District is required"),
+  state: z.string().min(1, "State is required"),
   active: z.boolean().default(true),
 });
 
@@ -47,10 +49,12 @@ export default function VendorOnboarding() {
     defaultValues: {
       name: "",
       phoneNumber: "",
+      panNumber: "",
+      aadharNumber: "",
       location: "",
       pinCode: "",
-      aadharNumber: "",
-      panNumber: "",
+      district: "",
+      state: "",
       active: true,
     },
   });
@@ -162,6 +166,52 @@ export default function VendorOnboarding() {
                   )}
                 />
 
+                {/* PAN Card Number */}
+                <FormField
+                  control={form.control}
+                  name="panNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>PAN Card Number (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="ABCDE1234F"
+                          maxLength={10}
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                          data-testid="input-pan-number"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Aadhar Number */}
+                <FormField
+                  control={form.control}
+                  name="aadharNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Aadhar Card Number (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          placeholder="Enter 12-digit Aadhar number"
+                          maxLength={12}
+                          {...field}
+                          data-testid="input-aadhar-number"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {/* Area / Locality */}
                 <FormField
                   control={form.control}
@@ -202,20 +252,18 @@ export default function VendorOnboarding() {
                   )}
                 />
 
-                {/* Aadhar Number */}
+                {/* District */}
                 <FormField
                   control={form.control}
-                  name="aadharNumber"
+                  name="district"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Aadhar Card Number (Optional)</FormLabel>
+                      <FormLabel>District</FormLabel>
                       <FormControl>
                         <Input
-                          type="tel"
-                          placeholder="Enter 12-digit Aadhar number"
-                          maxLength={12}
+                          placeholder="Enter district"
                           {...field}
-                          data-testid="input-aadhar-number"
+                          data-testid="input-district"
                         />
                       </FormControl>
                       <FormMessage />
@@ -223,26 +271,20 @@ export default function VendorOnboarding() {
                   )}
                 />
 
-                {/* PAN Card Number */}
+                {/* State */}
                 <FormField
                   control={form.control}
-                  name="panNumber"
+                  name="state"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>PAN Card Number (Optional)</FormLabel>
+                      <FormLabel>State</FormLabel>
                       <FormControl>
                         <Input
-                          type="text"
-                          placeholder="ABCDE1234F"
-                          maxLength={10}
+                          placeholder="Enter state"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                          data-testid="input-pan-number"
+                          data-testid="input-state"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
