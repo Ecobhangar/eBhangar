@@ -8,6 +8,9 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number").notNull().unique(),
   name: text("name"),
   address: text("address"),
+  pinCode: text("pin_code"),
+  district: text("district"),
+  state: text("state"),
   role: text("role").notNull().default("customer"), // customer, admin, vendor
   createdAt: timestamp("created_at").defaultNow(),
 });
