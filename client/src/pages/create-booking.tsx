@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,22 @@ interface SelectedItem {
   value: number;
 }
 
+interface UserProfile {
+  id: string;
+  name: string | null;
+  phoneNumber: string;
+  address: string | null;
+  pinCode: string | null;
+  district: string | null;
+  state: string | null;
+}
+
 export default function CreateBooking() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   
+  const [addressType, setAddressType] = useState<"saved" | "new">("saved");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState(user?.phoneNumber || "");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -46,9 +57,33 @@ export default function CreateBooking() {
   const [currentCategoryId, setCurrentCategoryId] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("1");
 
+  const { data: userProfile } = useQuery<UserProfile>({
+    queryKey: ["/api/users/me"],
+    enabled: !!user,
+  });
+
   const { data: categories = [], isLoading } = useQuery<CategoryType[]>({
     queryKey: ["/api/categories"],
   });
+
+  // Auto-fill customer details when address type changes
+  useEffect(() => {
+    if (addressType === "saved" && userProfile) {
+      setCustomerName(userProfile.name || "");
+      setCustomerPhone(userProfile.phoneNumber);
+      setCustomerAddress(userProfile.address || "");
+      setPinCode(userProfile.pinCode || "");
+      setDistrict(userProfile.district || "");
+      setState(userProfile.state || "");
+    } else if (addressType === "new") {
+      setCustomerName("");
+      setCustomerPhone("");
+      setCustomerAddress("");
+      setPinCode("");
+      setDistrict("");
+      setState("");
+    }
+  }, [addressType, userProfile]);
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -166,6 +201,35 @@ export default function CreateBooking() {
               <CardTitle>Customer Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Address Type Selection */}
+              <div className="space-y-3">
+                <Label>Pickup Address</Label>
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant={addressType === "saved" ? "default" : "outline"}
+                    onClick={() => setAddressType("saved")}
+                    disabled={!userProfile?.address}
+                    data-testid="button-saved-address"
+                    className="flex-1"
+                  >
+                    Use Saved Address
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={addressType === "new" ? "default" : "outline"}
+                    onClick={() => setAddressType("new")}
+                    data-testid="button-new-address"
+                    className="flex-1"
+                  >
+                    New Pickup Address
+                  </Button>
+                </div>
+                {!userProfile?.address && (
+                  <p className="text-sm text-muted-foreground">No saved address found. Please enter new pickup address.</p>
+                )}
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name *</Label>
@@ -175,6 +239,7 @@ export default function CreateBooking() {
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Enter your name"
+                    disabled={addressType === "saved"}
                   />
                 </div>
                 <div className="space-y-2">
@@ -185,6 +250,7 @@ export default function CreateBooking() {
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Enter phone number"
+                    disabled={addressType === "saved"}
                   />
                 </div>
               </div>
@@ -198,6 +264,7 @@ export default function CreateBooking() {
                   onChange={(e) => setCustomerAddress(e.target.value)}
                   placeholder="Enter your complete address"
                   rows={3}
+                  disabled={addressType === "saved"}
                 />
               </div>
 
@@ -211,6 +278,7 @@ export default function CreateBooking() {
                     onChange={(e) => setPinCode(e.target.value)}
                     placeholder="Enter pin code"
                     maxLength={6}
+                    disabled={addressType === "saved"}
                   />
                 </div>
                 <div className="space-y-2">
@@ -221,6 +289,7 @@ export default function CreateBooking() {
                     value={district}
                     onChange={(e) => setDistrict(e.target.value)}
                     placeholder="Enter district"
+                    disabled={addressType === "saved"}
                   />
                 </div>
                 <div className="space-y-2">
@@ -231,6 +300,7 @@ export default function CreateBooking() {
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     placeholder="Enter state"
+                    disabled={addressType === "saved"}
                   />
                 </div>
               </div>
