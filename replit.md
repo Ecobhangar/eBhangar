@@ -78,9 +78,11 @@ The storage pattern implements a repository/interface pattern:
    - Supports dynamic pricing ranges
 
 3. **vendors** - Vendor profiles linked to user accounts
-   - Fields: id, userId (FK to users), location, pinCode, active (boolean), activePickups counter
+   - Fields: id, userId (FK to users), location, pinCode, aadharNumber, panNumber, active (boolean), activePickups counter
    - One-to-one relationship with users
    - pinCode field enables location-based vendor assignment
+   - aadharNumber: Optional 12-digit Aadhar card number
+   - panNumber: Optional PAN card in format ABCDE1234F
    - active flag controls vendor availability (default: true)
 
 4. **bookings** - Customer orders/pickup requests
@@ -229,8 +231,11 @@ Required environment variables:
 - **Vendor Onboarding System:**
   - Dedicated vendor onboarding form at `/admin/vendors/onboard`
   - Create new vendors with complete details
-  - Form fields: Vendor Name, Phone Number, Area/Locality, Pincode
+  - Form fields: Vendor Name, Phone Number, Area/Locality, Pincode, Aadhar Card (optional), PAN Card (optional)
   - Active/Inactive status toggle (default: Active)
+  - Document validation:
+    - Aadhar: Exactly 12 digits
+    - PAN: Format ABCDE1234F (5 letters, 4 digits, 1 letter)
   - Automatic user account creation with vendor role
   - Duplicate phone number validation
   - Success confirmation with auto-redirect
