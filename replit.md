@@ -77,8 +77,9 @@ The storage pattern implements a repository/interface pattern:
    - Supports dynamic pricing ranges
 
 3. **vendors** - Vendor profiles linked to user accounts
-   - Fields: id, userId (FK to users), location, activePickups counter
+   - Fields: id, userId (FK to users), location, pinCode, activePickups counter
    - One-to-one relationship with users
+   - pinCode field enables location-based vendor assignment
 
 4. **bookings** - Customer orders/pickup requests
    - Fields: id, customerId (FK), customer details (denormalized: name, phone, address, pinCode, district, state), totalValue, status, vendorId (FK)
@@ -197,7 +198,10 @@ Required environment variables:
 
 **Admin Features:**
 - View all bookings across platform
-- Assign vendors to pending bookings via dropdown selector on booking cards
+- **Smart Vendor Assignment:** 
+  - Dropdown shows only vendors from same pin code as booking
+  - Filters vendors by location for better service matching
+  - Assign vendors to pending bookings
 - Track booking statuses (pending → assigned → completed)
 - Manage vendor assignments
 - **Email Notifications:** Automatic email alerts for new bookings (optional setup)
