@@ -10,14 +10,25 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ icon: Icon, name, baseRate, selected, onClick }: CategoryCardProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <Card 
-      className={`group relative p-6 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden ${
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      className={`group relative p-6 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 ${
         selected 
           ? "border-2 border-green-500 bg-green-50/50 dark:bg-green-950/30" 
           : "border border-border hover:border-green-200 dark:hover:border-green-800"
       }`}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       data-testid={`card-category-${name.toLowerCase().replace(/\s+/g, '-')}`}
     >
       {/* Gradient Background on Hover */}

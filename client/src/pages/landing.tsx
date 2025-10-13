@@ -146,7 +146,7 @@ export default function Landing() {
             {/* Copyright */}
             <div className="text-center md:text-right">
               <p className="text-sm text-muted-foreground">© 2024 eBhangar. All rights reserved.</p>
-              <p className="text-xs text-muted-foreground mt-1">Turning waste into worth, one pickup at a time 🌱</p>
+              <p className="text-xs text-muted-foreground mt-1">Turning waste into worth, one pickup at a time</p>
             </div>
           </div>
         </div>

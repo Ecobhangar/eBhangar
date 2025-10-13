@@ -255,11 +255,11 @@ export default function Dashboard() {
             {/* Mobile Floating Action Button */}
             <Button
               onClick={() => setLocation("/bookings/new")}
-              className="sm:hidden fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 z-50 hover:scale-110 transition-all duration-300"
               size="icon"
+              className="sm:hidden fixed bottom-6 right-6 rounded-full shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 z-50 hover:scale-110 transition-all duration-300"
               data-testid="button-new-booking-mobile"
             >
-              <Plus className="w-8 h-8" />
+              <Plus className="w-6 h-6" />
             </Button>
 
             <div>
