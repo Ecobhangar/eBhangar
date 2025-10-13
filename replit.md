@@ -69,8 +69,9 @@ The storage pattern implements a repository/interface pattern:
 
 **Core Tables:**
 1. **users** - Stores user accounts with phone-based authentication
-   - Fields: id (UUID), phoneNumber (unique), name, address, role (customer/vendor/admin)
+   - Fields: id (UUID), phoneNumber (unique), name, address, pinCode, district, state, role (customer/vendor/admin)
    - Auto-generated UUIDs for primary keys
+   - Address fields (address, pinCode, district, state) are nullable and used for saved address feature
 
 2. **categories** - Scrap item types with pricing
    - Fields: id, name (unique), unit (kg/unit), minRate, maxRate, icon
@@ -186,10 +187,13 @@ Required environment variables:
 
 **Customer Features:**
 - **New Booking Flow (Redesigned):**
-  - **Step 1:** Customer details form - name, address, pin code, district, state
+  - **Step 1:** Customer details form with saved address feature
+    - **"Use Saved Address":** Auto-fills all fields (name, phone, address, pin code, district, state) from user profile - all fields disabled for consistency
+    - **"New Pickup Address":** Provides empty form for fresh address entry - all fields editable
+    - Button disabled if no saved address exists in profile
   - **Step 2:** Category selection via dropdown with quantity input
   - Auto-calculated estimated value displayed prominently before submission
-  - Removed "New Booking" button from dashboard (customers use direct URL /bookings/new)
+  - "New Booking" button on customer dashboard for easy access
 - View personal booking history
 - **Status-based actions:**
   - **Pending bookings:** Edit and Delete options available
