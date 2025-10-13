@@ -25,6 +25,7 @@ export const vendors = pgTable("vendors", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
   location: text("location").notNull(),
+  pinCode: text("pin_code"),
   activePickups: integer("active_pickups").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
