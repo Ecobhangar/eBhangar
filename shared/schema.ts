@@ -35,6 +35,9 @@ export const bookings = pgTable("bookings", {
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),
   customerAddress: text("customer_address").notNull(),
+  pinCode: text("pin_code"),
+  district: text("district"),
+  state: text("state"),
   totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // pending, assigned, completed
   vendorId: varchar("vendor_id").references(() => vendors.id),
