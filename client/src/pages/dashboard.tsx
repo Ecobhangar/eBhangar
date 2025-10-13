@@ -298,9 +298,20 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="admin" className="space-y-8">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage all bookings and vendors</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Admin Dashboard</h1>
+                <p className="text-muted-foreground mt-1">Manage all bookings and vendors</p>
+              </div>
+              <Button 
+                onClick={() => setLocation("/admin/vendors/onboard")} 
+                data-testid="button-onboard-vendor" 
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 gap-2"
+                size="lg"
+              >
+                <Plus className="w-5 h-5" />
+                Add Vendor
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

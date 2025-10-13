@@ -11,6 +11,7 @@ import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import CreateBooking from "@/pages/create-booking";
 import Profile from "@/pages/profile";
+import VendorOnboarding from "@/pages/vendor-onboarding";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/bookings/new" component={CreateBooking} />
       <Route path="/bookings/edit/:id" component={CreateBooking} />
+      <Route path="/admin/vendors/onboard" component={VendorOnboarding} />
       <Route component={NotFound} />
     </Switch>
   );

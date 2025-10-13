@@ -45,11 +45,8 @@ export default function VendorOnboarding() {
 
   const onboardVendor = useMutation({
     mutationFn: async (data: VendorOnboardingForm) => {
-      const response = await apiRequest("/api/admin/vendors/onboard", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      return response;
+      const res = await apiRequest("POST", "/api/admin/vendors/onboard", data);
+      return res.json();
     },
     onSuccess: () => {
       setIsSuccess(true);
