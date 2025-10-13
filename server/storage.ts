@@ -135,20 +135,36 @@ export class DbStorage implements IStorage {
   }
 
   // Booking methods
-  async getAllBookings(): Promise<(Booking & { items: BookingItem[] })[]> {
+  async getAllBookings(): Promise<(Booking & { items: BookingItem[], vendor?: { name: string, phone: string } })[]> {
     const allBookings = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
     
     const bookingsWithItems = await Promise.all(
       allBookings.map(async (booking: Booking) => {
         const items = await db.select().from(bookingItems).where(eq(bookingItems.bookingId, booking.id));
-        return { ...booking, items };
+        
+        let vendor = undefined;
+        if (booking.vendorId) {
+          const vendorResult = await db.select({
+            name: users.name,
+            phone: users.phoneNumber
+          })
+          .from(vendors)
+          .leftJoin(users, eq(vendors.userId, users.id))
+          .where(eq(vendors.id, booking.vendorId));
+          
+          if (vendorResult.length > 0 && vendorResult[0].name && vendorResult[0].phone) {
+            vendor = { name: vendorResult[0].name, phone: vendorResult[0].phone };
+          }
+        }
+        
+        return { ...booking, items, vendor };
       })
     );
     
     return bookingsWithItems;
   }
 
-  async getBookingsByCustomer(customerId: string): Promise<(Booking & { items: BookingItem[] })[]> {
+  async getBookingsByCustomer(customerId: string): Promise<(Booking & { items: BookingItem[], vendor?: { name: string, phone: string } })[]> {
     const customerBookings = await db.select()
       .from(bookings)
       .where(eq(bookings.customerId, customerId))
@@ -157,14 +173,30 @@ export class DbStorage implements IStorage {
     const bookingsWithItems = await Promise.all(
       customerBookings.map(async (booking: Booking) => {
         const items = await db.select().from(bookingItems).where(eq(bookingItems.bookingId, booking.id));
-        return { ...booking, items };
+        
+        let vendor = undefined;
+        if (booking.vendorId) {
+          const vendorResult = await db.select({
+            name: users.name,
+            phone: users.phoneNumber
+          })
+          .from(vendors)
+          .leftJoin(users, eq(vendors.userId, users.id))
+          .where(eq(vendors.id, booking.vendorId));
+          
+          if (vendorResult.length > 0 && vendorResult[0].name && vendorResult[0].phone) {
+            vendor = { name: vendorResult[0].name, phone: vendorResult[0].phone };
+          }
+        }
+        
+        return { ...booking, items, vendor };
       })
     );
     
     return bookingsWithItems;
   }
 
-  async getBookingsByVendor(vendorId: string): Promise<(Booking & { items: BookingItem[] })[]> {
+  async getBookingsByVendor(vendorId: string): Promise<(Booking & { items: BookingItem[], vendor?: { name: string, phone: string } })[]> {
     const vendorBookings = await db.select()
       .from(bookings)
       .where(eq(bookings.vendorId, vendorId))
@@ -173,7 +205,23 @@ export class DbStorage implements IStorage {
     const bookingsWithItems = await Promise.all(
       vendorBookings.map(async (booking: Booking) => {
         const items = await db.select().from(bookingItems).where(eq(bookingItems.bookingId, booking.id));
-        return { ...booking, items };
+        
+        let vendor = undefined;
+        if (booking.vendorId) {
+          const vendorResult = await db.select({
+            name: users.name,
+            phone: users.phoneNumber
+          })
+          .from(vendors)
+          .leftJoin(users, eq(vendors.userId, users.id))
+          .where(eq(vendors.id, booking.vendorId));
+          
+          if (vendorResult.length > 0 && vendorResult[0].name && vendorResult[0].phone) {
+            vendor = { name: vendorResult[0].name, phone: vendorResult[0].phone };
+          }
+        }
+        
+        return { ...booking, items, vendor };
       })
     );
     
