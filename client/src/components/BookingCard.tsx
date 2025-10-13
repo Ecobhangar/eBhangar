@@ -24,9 +24,10 @@ interface BookingCardProps {
   onEdit?: (id: string) => void;
   onCancel?: (id: string) => void;
   showActions?: boolean;
-  vendors?: Array<{ id: string; name: string }>;
+  vendors?: Array<{ id: string; name: string; phone: string }>;
   onAssignVendor?: (bookingId: string, vendorId: string) => void;
   isAdmin?: boolean;
+  vendorInfo?: { name: string; phone: string };
 }
 
 const statusConfig = {
@@ -35,7 +36,7 @@ const statusConfig = {
   completed: { color: "bg-primary text-primary-foreground", label: "Completed" },
 };
 
-export function BookingCard({ id, customerName, phone, address, items, totalValue, status, date, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false }: BookingCardProps) {
+export function BookingCard({ id, customerName, phone, address, items, totalValue, status, date, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false, vendorInfo }: BookingCardProps) {
   const config = statusConfig[status];
   
   return (
@@ -100,6 +101,18 @@ export function BookingCard({ id, customerName, phone, address, items, totalValu
           <MapPin className="w-4 h-4 text-muted-foreground" />
           <span data-testid={`text-address-${id}`}>{address}</span>
         </div>
+        {vendorInfo && (status === "assigned" || status === "completed") && (
+          <div className="mt-3 pt-3 border-t">
+            <p className="text-xs font-medium text-muted-foreground mb-1">
+              {status === "completed" ? "Completed by:" : "Assigned to:"}
+            </p>
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="w-4 h-4 text-primary" />
+              <span className="font-medium" data-testid={`text-vendor-name-${id}`}>{vendorInfo.name}</span>
+              <span className="text-muted-foreground" data-testid={`text-vendor-phone-${id}`}>• {vendorInfo.phone}</span>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="border-t pt-4">
@@ -123,7 +136,10 @@ export function BookingCard({ id, customerName, phone, address, items, totalValu
               <SelectContent>
                 {vendors.map((vendor) => (
                   <SelectItem key={vendor.id} value={vendor.id} data-testid={`vendor-option-${vendor.id}`}>
-                    {vendor.name}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{vendor.name}</span>
+                      <span className="text-muted-foreground text-xs">• {vendor.phone}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
