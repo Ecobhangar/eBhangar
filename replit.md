@@ -212,9 +212,14 @@ Required environment variables:
 - View all bookings across platform
 - **Smart Vendor Assignment:** 
   - Dropdown shows only vendors from same pin code as booking
+  - **Displays vendor name AND phone number** in dropdown for easy identification
   - Filters vendors by location for better service matching
   - Assign vendors to pending bookings
 - Track booking statuses (pending → assigned → completed)
+- **Vendor Information Display:**
+  - Assigned bookings show "Assigned to: [Vendor Name] • [Phone]"
+  - Completed bookings show "Completed by: [Vendor Name] • [Phone]"
+  - Backend automatically fetches vendor details with all bookings
 - Manage vendor assignments
 - **Email Notifications:** Automatic email alerts for new bookings (optional setup)
   - Admin WhatsApp: +919226255355 (displayed in emails)
