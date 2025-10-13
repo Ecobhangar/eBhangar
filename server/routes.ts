@@ -82,8 +82,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/vendors", authenticateUser, requireRole("admin"), async (req, res) => {
     try {
-      const { userId, location } = req.body;
-      const vendor = await storage.createVendor({ userId, location });
+      const { userId, location, pinCode } = req.body;
+      const vendor = await storage.createVendor({ userId, location, pinCode });
       
       // Update user role to vendor
       await storage.updateUserRole(userId, "vendor");

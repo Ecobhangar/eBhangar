@@ -29,6 +29,9 @@ interface Booking {
   customerName: string;
   customerPhone: string;
   customerAddress: string;
+  pinCode?: string | null;
+  district?: string | null;
+  state?: string | null;
   totalValue: string;
   status: "pending" | "assigned" | "completed";
   createdAt: string;
@@ -38,6 +41,7 @@ interface Booking {
 interface Vendor {
   id: string;
   location: string;
+  pinCode?: string | null;
   user: {
     id: string;
     name: string | null;
@@ -268,30 +272,36 @@ export default function Dashboard() {
                 <p>Loading bookings...</p>
               ) : (
                 <div className="space-y-4">
-                  {bookings.map((booking) => (
-                    <BookingCard 
-                      key={booking.id} 
-                      id={booking.id}
-                      customerName={booking.customerName}
-                      phone={booking.customerPhone}
-                      address={booking.customerAddress}
-                      items={booking.items.map(item => ({ 
-                        category: item.categoryName, 
-                        quantity: item.quantity 
-                      }))}
-                      totalValue={parseFloat(booking.totalValue)}
-                      status={booking.status}
-                      date={new Date(booking.createdAt)}
-                      isAdmin={true}
-                      vendors={vendors.map(v => ({ 
-                        id: v.id, 
-                        name: v.user.name || v.user.phoneNumber 
-                      }))}
-                      onAssignVendor={(bookingId, vendorId) => {
-                        assignVendorMutation.mutate({ bookingId, vendorId });
-                      }}
-                    />
-                  ))}
+                  {bookings.map((booking) => {
+                    const filteredVendors = booking.pinCode 
+                      ? vendors.filter(v => v.pinCode === booking.pinCode)
+                      : vendors;
+                    
+                    return (
+                      <BookingCard 
+                        key={booking.id} 
+                        id={booking.id}
+                        customerName={booking.customerName}
+                        phone={booking.customerPhone}
+                        address={booking.customerAddress}
+                        items={booking.items.map(item => ({ 
+                          category: item.categoryName, 
+                          quantity: item.quantity 
+                        }))}
+                        totalValue={parseFloat(booking.totalValue)}
+                        status={booking.status}
+                        date={new Date(booking.createdAt)}
+                        isAdmin={true}
+                        vendors={filteredVendors.map(v => ({ 
+                          id: v.id, 
+                          name: v.user.name || v.user.phoneNumber 
+                        }))}
+                        onAssignVendor={(bookingId, vendorId) => {
+                          assignVendorMutation.mutate({ bookingId, vendorId });
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>
