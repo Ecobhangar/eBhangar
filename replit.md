@@ -191,13 +191,15 @@ Required environment variables:
   - **Pending bookings:** Edit and Delete options available
   - **Assigned bookings:** Cancel option available (returns to pending status)
   - **Completed bookings:** View only, no actions
-- WhatsApp notification to admin with booking details
 
 **Admin Features:**
 - View all bookings across platform
 - Assign vendors to pending bookings via dropdown selector on booking cards
 - Track booking statuses (pending → assigned → completed)
 - Manage vendor assignments
+- **Email Notifications:** Automatic email alerts for new bookings (optional setup)
+  - Admin WhatsApp: +919226255355 (displayed in emails)
+  - Configure SMTP in Replit Secrets (see EMAIL_SETUP.md)
 
 **Vendor Features:**
 - View assigned pickups
@@ -220,17 +222,24 @@ Required environment variables:
 4. **Admin Actions:** Assign vendors to pending bookings
 5. **Vendor Actions:** Mark assigned pickups as completed
 
-### 📱 WhatsApp Integration
+### 📧 Notification System
 
-When a booking is created, a WhatsApp link is generated that opens WhatsApp with a pre-filled message containing:
-- Customer details (name, phone, address)
-- Selected items with quantities
-- Total estimated value
-- Admin can click to send the message to their WhatsApp number
+**In-App Notifications (Active):**
+- Admin dashboard shows all new bookings in real-time
+- Toast notifications for all booking actions
+- Live status updates without page refresh
+
+**Email Notifications (Optional):**
+- Automatic email alerts to admin when customers create bookings
+- Email includes: customer details, items, total value, booking ID
+- Admin WhatsApp (+919226255355) displayed in all emails
+- Configure SMTP credentials in Replit Secrets (see `EMAIL_SETUP.md`)
+- Free setup with Gmail, Outlook, SendGrid, or Mailgun
 
 ### 🔄 Future Enhancements (Not Implemented)
 
-- WhatsApp Business API for automated notifications
+- WhatsApp Business API integration (currently using email + in-app)
+- SMS notifications via Twilio
 - Real-time vendor location tracking
 - Payment integration
 - Rating and review system
