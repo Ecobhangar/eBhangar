@@ -15,10 +15,10 @@ import {
   CheckCircle, 
   Clock, 
   IndianRupee,
-  Leaf,
   Plus,
   User as UserIcon
 } from "lucide-react";
+import logoImage from "@assets/Logo1_1760458264413.png";
 
 interface BookingItem {
   categoryName: string;
@@ -175,8 +175,7 @@ export default function Dashboard() {
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Leaf className="w-7 h-7 text-primary" />
-            <span className="text-xl font-bold font-[Poppins]">eBhangar</span>
+            <img src={logoImage} alt="eBhangar" className="h-9 w-auto" data-testid="img-logo" />
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">
