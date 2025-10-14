@@ -1,0 +1,89 @@
+Create a “Legal & Info Section” for my app eBhangar using React + Tailwind CSS, with 5 responsive pages:
+
+1️⃣ Terms & Conditions
+2️⃣ Privacy Policy
+3️⃣ Disclaimer
+4️⃣ Vendor Onboarding Policy
+5️⃣ Contact / Grievance Page
+
+Use a clean, eco-friendly, and minimal UI — white background, green accents, soft shadows, rounded cards, and responsive typography.
+Each page should include a simple header (eBhangar logo + title) and footer links: Terms | Privacy | Vendor Policy | Contact.
+
+📜 FULL PAGE CONTENT (use exactly as written below)
+🧾 Terms & Conditions
+
+Welcome to eBhangar — a digital platform that connects users with verified local scrap vendors for easy recycling and pickup services.
+
+By using our app, you agree to the following terms:
+
+eBhangar is a digital intermediary; we do not buy or sell scrap directly.
+
+All scrap pickups are managed independently by third-party vendors.
+
+Users must provide accurate address and contact information for smooth pickup.
+
+Any payment disputes are to be resolved directly between the user and the vendor.
+
+eBhangar reserves the right to modify terms and services at any time.
+
+Important:
+eBhangar will never demand payment or offer cash-for-scrap directly.
+
+🔒 Privacy Policy
+
+At eBhangar, your privacy matters.
+We collect only necessary information such as your name, phone number, and address to schedule pickups.
+
+How we use your data:
+
+To connect you with nearby scrap vendors.
+
+To notify you about pickup confirmations and updates.
+
+To improve service experience and security.
+
+We never:
+
+Sell your personal information.
+
+Share your details with unrelated third parties.
+
+For any privacy concerns, contact us at support@ebhangar.com
+.
+
+⚖️ Disclaimer
+
+eBhangar acts solely as a digital intermediary connecting users with independent scrap collectors.
+The platform does not directly buy, sell, or store any scrap materials.
+
+Vendors are responsible for the quality of service, pricing, and payments.
+eBhangar holds no liability for disputes or miscommunication between parties.
+
+Use of the platform indicates acceptance of this disclaimer.
+
+🤝 Vendor Onboarding Policy
+
+All vendors registered on eBhangar must comply with ethical recycling and transparent trade practices.
+
+Vendor responsibilities:
+
+Maintain cleanliness and safety during pickup.
+
+Offer fair and consistent pricing.
+
+Respect user privacy and time.
+
+Ensure legal disposal or recycling of collected scrap.
+
+eBhangar may suspend or remove vendors who fail to follow these policies.
+
+📞 Contact / Grievance Page
+
+For any queries, feedback, or grievance, please contact us:
+
+📧 Email: support@ebhangar.com
+
+👤 Grievance Officer: eBhangar Support Team
+🕓 Response Time: Within 48 business hours
+
+Thank you for helping us promote responsible recycling and a cleaner India 🌿
