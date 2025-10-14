@@ -12,6 +12,11 @@ import Dashboard from "@/pages/dashboard";
 import CreateBooking from "@/pages/create-booking";
 import Profile from "@/pages/profile";
 import VendorOnboarding from "@/pages/vendor-onboarding";
+import TermsAndConditions from "@/pages/legal/terms";
+import PrivacyPolicy from "@/pages/legal/privacy";
+import Disclaimer from "@/pages/legal/disclaimer";
+import VendorPolicy from "@/pages/legal/vendor-policy";
+import ContactGrievance from "@/pages/legal/contact";
 
 function Router() {
   return (
@@ -23,6 +28,11 @@ function Router() {
       <Route path="/bookings/new" component={CreateBooking} />
       <Route path="/bookings/edit/:id" component={CreateBooking} />
       <Route path="/admin/vendors/onboard" component={VendorOnboarding} />
+      <Route path="/legal/terms" component={TermsAndConditions} />
+      <Route path="/legal/privacy" component={PrivacyPolicy} />
+      <Route path="/legal/disclaimer" component={Disclaimer} />
+      <Route path="/legal/vendor-policy" component={VendorPolicy} />
+      <Route path="/legal/contact" component={ContactGrievance} />
       <Route component={NotFound} />
     </Switch>
   );
