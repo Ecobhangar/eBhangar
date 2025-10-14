@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { OTPInput } from "@/components/OTPInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf } from "lucide-react";
 import type { ConfirmationResult, RecaptchaVerifier } from "firebase/auth";
+import logoImage from "@assets/Logo1_1760458264413.png";
 
 export default function Login() {
   const [step, setStep] = useState<"phone" | "otp">("phone");
@@ -83,10 +83,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-background p-4">
       <Card className="w-full max-w-md p-8">
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Leaf className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold font-[Poppins]">eBhangar</h1>
-          </div>
+          <img src={logoImage} alt="eBhangar" className="h-12 w-auto mb-2" data-testid="img-logo" />
           <p className="text-sm text-muted-foreground">Smart Scrap Collection</p>
         </div>
 
