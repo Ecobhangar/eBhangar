@@ -12,12 +12,12 @@ import {
   Trash2,
   FileText,
   BookOpen,
+  Recycle,
   Sparkles,
   ArrowRight
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
-import logoImage from "@assets/Logo1_1760458264413.png";
 
 const categories = [
   { icon: AirVent, name: "Old AC", rate: "₹800-1500/unit" },
@@ -48,7 +48,10 @@ export default function Landing() {
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur-lg z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={logoImage} alt="eBhangar" className="h-10 w-auto" data-testid="img-logo" />
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+              <Recycle className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent" data-testid="text-logo">eBhangar</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login">
@@ -132,7 +135,7 @@ export default function Landing() {
             {/* Logo & Tagline */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                <Leaf className="w-6 h-6 text-white" />
+                <Recycle className="w-6 h-6 text-white" />
               </div>
               <div>
                 <span className="text-xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">eBhangar</span>

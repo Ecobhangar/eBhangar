@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Leaf, Plus, Trash2 } from "lucide-react";
+import { Recycle, Plus, Trash2 } from "lucide-react";
 
 interface CategoryType {
   id: string;
@@ -154,7 +154,7 @@ export default function CreateBooking() {
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Leaf className="w-7 h-7 text-primary" />
+            <Recycle className="w-7 h-7 text-primary" />
             <span className="text-xl font-bold font-[Poppins]">eBhangar</span>
           </div>
           <div className="flex items-center gap-4">
