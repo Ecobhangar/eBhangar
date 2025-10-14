@@ -283,6 +283,43 @@ Required environment variables:
 - Configure SMTP credentials in Replit Secrets (see `EMAIL_SETUP.md`)
 - Free setup with Gmail, Outlook, SendGrid, or Mailgun
 
+### 📋 Legal & Info Section
+
+**5 Legal Pages Available:**
+All pages are accessible from the landing page footer with clean, eco-friendly design using green accents and lucide-react icons.
+
+1. **Terms & Conditions** (`/legal/terms`)
+   - Platform usage terms
+   - User responsibilities
+   - Important disclaimers about payment and services
+
+2. **Privacy Policy** (`/legal/privacy`)
+   - Data collection and usage practices
+   - Privacy protections and commitments
+   - Contact email for privacy concerns
+
+3. **Disclaimer** (`/legal/disclaimer`)
+   - Platform liability limitations
+   - Vendor responsibility clarifications
+   - Service scope definition
+
+4. **Vendor Onboarding Policy** (`/legal/vendor-policy`)
+   - Vendor compliance requirements
+   - Ethical recycling standards
+   - Service quality expectations
+
+5. **Contact / Grievance** (`/legal/contact`)
+   - Support email: support@ebhangar.com
+   - Grievance officer information
+   - Response time commitment (48 hours)
+
+**Design Features:**
+- Shared layout with eBhangar branding
+- Responsive card-based design with soft shadows
+- Footer navigation linking all legal pages
+- Home button in header returns to landing page
+- All icons from lucide-react (FileText, Shield, Scale, Handshake, Phone, Leaf)
+
 ### 🔄 Future Enhancements (Not Implemented)
 
 - WhatsApp Business API integration (currently using email + in-app)
