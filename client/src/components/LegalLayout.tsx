@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Recycle } from "lucide-react";
+import { Logo } from "./Logo";
 
 interface LegalLayoutProps {
   title: string;
@@ -14,13 +14,8 @@ export default function LegalLayout({ title, children }: LegalLayoutProps) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Link href="/" data-testid="link-home">
-              <div className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-lg px-2 py-1 cursor-pointer">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                  <Recycle className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  eBhangar
-                </span>
+              <div className="hover-elevate active-elevate-2 rounded-lg px-2 py-1 cursor-pointer">
+                <Logo size="default" />
               </div>
             </Link>
             <div className="ml-auto">
@@ -44,10 +39,8 @@ export default function LegalLayout({ title, children }: LegalLayoutProps) {
       <footer className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-card mt-12">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                <Recycle className="w-5 h-5 text-white" />
-              </div>
+            <div className="flex items-center gap-3">
+              <Logo size="small" />
               <span className="text-sm text-muted-foreground">
                 © 2024 eBhangar. All rights reserved.
               </span>

@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Recycle, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 interface CategoryType {
   id: string;
@@ -153,10 +154,7 @@ export default function CreateBooking() {
     <div className="min-h-screen bg-background">
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Recycle className="w-7 h-7 text-primary" />
-            <span className="text-xl font-bold font-[Poppins]">eBhangar</span>
-          </div>
+          <Logo size="small" />
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <Button variant="ghost" onClick={() => setLocation("/dashboard")} data-testid="button-back-dashboard">

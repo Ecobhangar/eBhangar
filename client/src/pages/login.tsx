@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { OTPInput } from "@/components/OTPInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Recycle } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import type { ConfirmationResult, RecaptchaVerifier } from "firebase/auth";
 
 export default function Login() {
@@ -83,11 +83,8 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-background p-4">
       <Card className="w-full max-w-md p-8">
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Recycle className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold font-[Poppins]">eBhangar</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">Smart Scrap Collection</p>
+          <Logo size="large" />
+          <p className="text-sm text-muted-foreground mt-2">Smart Scrap Collection</p>
         </div>
 
         {step === "phone" ? (

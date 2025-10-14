@@ -7,6 +7,7 @@ import { VendorCard } from "@/components/VendorCard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,7 +16,6 @@ import {
   CheckCircle, 
   Clock, 
   IndianRupee,
-  Recycle,
   Plus,
   User as UserIcon
 } from "lucide-react";
@@ -174,10 +174,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Recycle className="w-7 h-7 text-primary" />
-            <span className="text-xl font-bold font-[Poppins]">eBhangar</span>
-          </div>
+          <Logo size="small" />
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.phoneNumber}
