@@ -131,7 +131,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-t py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex flex-col items-center gap-6">
             {/* Logo & Tagline */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
@@ -143,8 +143,41 @@ export default function Landing() {
               </div>
             </div>
 
+            {/* Legal Links */}
+            <nav className="flex flex-wrap items-center justify-center gap-4 text-sm">
+              <Link href="/legal/terms" data-testid="link-footer-terms">
+                <span className="text-muted-foreground hover:text-green-600 dark:hover:text-green-400 transition-colors cursor-pointer">
+                  Terms
+                </span>
+              </Link>
+              <span className="text-gray-300 dark:text-gray-700">|</span>
+              <Link href="/legal/privacy" data-testid="link-footer-privacy">
+                <span className="text-muted-foreground hover:text-green-600 dark:hover:text-green-400 transition-colors cursor-pointer">
+                  Privacy
+                </span>
+              </Link>
+              <span className="text-gray-300 dark:text-gray-700">|</span>
+              <Link href="/legal/disclaimer" data-testid="link-footer-disclaimer">
+                <span className="text-muted-foreground hover:text-green-600 dark:hover:text-green-400 transition-colors cursor-pointer">
+                  Disclaimer
+                </span>
+              </Link>
+              <span className="text-gray-300 dark:text-gray-700">|</span>
+              <Link href="/legal/vendor-policy" data-testid="link-footer-vendor-policy">
+                <span className="text-muted-foreground hover:text-green-600 dark:hover:text-green-400 transition-colors cursor-pointer">
+                  Vendor Policy
+                </span>
+              </Link>
+              <span className="text-gray-300 dark:text-gray-700">|</span>
+              <Link href="/legal/contact" data-testid="link-footer-contact">
+                <span className="text-muted-foreground hover:text-green-600 dark:hover:text-green-400 transition-colors cursor-pointer">
+                  Contact
+                </span>
+              </Link>
+            </nav>
+
             {/* Copyright */}
-            <div className="text-center md:text-right">
+            <div className="text-center">
               <p className="text-sm text-muted-foreground">© 2024 eBhangar. All rights reserved.</p>
               <p className="text-xs text-muted-foreground mt-1">Turning waste into worth, one pickup at a time</p>
             </div>

@@ -1,6 +1,6 @@
 import LegalLayout from "@/components/LegalLayout";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, AlertTriangle, FileText } from "lucide-react";
 
 export default function TermsAndConditions() {
   return (
@@ -9,7 +9,7 @@ export default function TermsAndConditions() {
         <div className="space-y-6">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">📜</span>
+              <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <h2 className="text-2xl font-bold font-[Poppins] text-foreground mb-2">

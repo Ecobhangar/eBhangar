@@ -1,6 +1,6 @@
 import LegalLayout from "@/components/LegalLayout";
 import { Card } from "@/components/ui/card";
-import { Mail, User, Clock, Leaf } from "lucide-react";
+import { Mail, User, Clock, Leaf, Phone } from "lucide-react";
 
 export default function ContactGrievance() {
   return (
@@ -9,7 +9,7 @@ export default function ContactGrievance() {
         <div className="space-y-6">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">📞</span>
+              <Phone className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <h2 className="text-2xl font-bold font-[Poppins] text-foreground mb-2">
@@ -57,8 +57,8 @@ export default function ContactGrievance() {
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg p-6 border border-green-200 dark:border-green-800/30">
               <div className="flex items-center gap-3 justify-center">
                 <Leaf className="w-6 h-6 text-green-600 dark:text-green-400" />
-                <p className="text-center text-foreground">
-                  Thank you for helping us promote responsible recycling and a cleaner India 🌿
+                <p className="text-center text-foreground font-medium">
+                  Thank you for helping us promote responsible recycling and a cleaner India
                 </p>
               </div>
             </div>
