@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authenticateUser, requireRole } from "./middleware/auth";
-import { insertUserSchema, insertCategorySchema, insertVendorSchema, insertBookingSchema } from "@shared/schema";
+import { insertUserSchema, insertCategorySchema, insertVendorSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
 import { sendBookingNotification } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -424,6 +424,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       res.json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Review routes
+  app.post("/api/reviews", authenticateUser, async (req, res) => {
+    try {
+      const { bookingId, vendorId, rating, comment } = req.body;
+      
+      // Check if booking exists and is completed
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      
+      if (booking.status !== "completed") {
+        return res.status(400).json({ error: "Can only review completed bookings" });
+      }
+      
+      if (booking.customerId !== req.user!.id) {
+        return res.status(403).json({ error: "You can only review your own bookings" });
+      }
+      
+      // Check if review already exists for this booking
+      const existingReview = await storage.getReviewByBooking(bookingId);
+      if (existingReview) {
+        return res.status(400).json({ error: "Review already submitted for this booking" });
+      }
+      
+      const validatedData = insertReviewSchema.parse({
+        bookingId,
+        customerId: req.user!.id,
+        vendorId,
+        rating,
+        comment
+      });
+      
+      const review = await storage.createReview(validatedData);
+      res.json(review);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/reviews/vendor/:vendorId", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const reviews = await storage.getReviewsByVendor(vendorId);
+      const averageRating = await storage.getVendorAverageRating(vendorId);
+      
+      res.json({
+        reviews,
+        averageRating,
+        totalReviews: reviews.length
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/reviews/booking/:bookingId", authenticateUser, async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const review = await storage.getReviewByBooking(bookingId);
+      res.json(review || null);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
