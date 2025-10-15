@@ -64,6 +64,16 @@ export const bookingItems = pgTable("booking_items", {
   value: decimal("value", { precision: 10, scale: 2 }).notNull(),
 });
 
+export const reviews = pgTable("reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  customerId: varchar("customer_id").references(() => users.id).notNull(),
+  vendorId: varchar("vendor_id").references(() => vendors.id).notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -91,6 +101,16 @@ export const insertBookingItemSchema = createInsertSchema(bookingItems).omit({
   id: true,
 });
 
+export const insertReviewSchema = createInsertSchema(reviews)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    rating: z.number().int().min(1).max(5),
+    comment: z.string().min(1).max(500).optional(),
+  });
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -106,3 +126,6 @@ export type InsertBooking = z.infer<typeof insertBookingSchema>;
 
 export type BookingItem = typeof bookingItems.$inferSelect;
 export type InsertBookingItem = z.infer<typeof insertBookingItemSchema>;
+
+export type Review = typeof reviews.$inferSelect;
+export type InsertReview = z.infer<typeof insertReviewSchema>;
