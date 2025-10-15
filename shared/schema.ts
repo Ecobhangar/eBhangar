@@ -50,6 +50,8 @@ export const bookings = pgTable("bookings", {
   totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // pending, assigned, completed
   vendorId: varchar("vendor_id").references(() => vendors.id),
+  vendorLatitude: decimal("vendor_latitude", { precision: 10, scale: 7 }),
+  vendorLongitude: decimal("vendor_longitude", { precision: 10, scale: 7 }),
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
