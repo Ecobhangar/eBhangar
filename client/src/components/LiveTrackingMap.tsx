@@ -10,6 +10,35 @@ interface LiveTrackingMapProps {
   bookingId: string;
 }
 
+// Singleton to ensure setOptions is only called once
+let isGoogleMapsInitialized = false;
+let googleMapsInitPromise: Promise<void> | null = null;
+
+async function initializeGoogleMaps() {
+  if (googleMapsInitPromise) {
+    return googleMapsInitPromise;
+  }
+
+  googleMapsInitPromise = (async () => {
+    if (isGoogleMapsInitialized) return;
+
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      throw new Error("Google Maps API key not configured");
+    }
+
+    setOptions({ 
+      apiKey,
+      version: "weekly",
+    } as any);
+
+    await importLibrary("maps");
+    isGoogleMapsInitialized = true;
+  })();
+
+  return googleMapsInitPromise;
+}
+
 export function LiveTrackingMap({ 
   vendorLatitude, 
   vendorLongitude, 
@@ -17,31 +46,20 @@ export function LiveTrackingMap({
   bookingId 
 }: LiveTrackingMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<any>(null);
-  const [vendorMarker, setVendorMarker] = useState<any>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const vendorMarkerRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    
-    if (!apiKey) {
-      setError("Google Maps API key not configured");
-      setIsLoading(false);
-      return;
-    }
+    let mounted = true;
 
     (async () => {
       try {
-        setOptions({ 
-          apiKey,
-          version: "weekly",
-        } as any);
-
-        await importLibrary("maps");
-        await importLibrary("marker");
+        await initializeGoogleMaps();
         
-        if (!mapRef.current) return;
+        if (!mounted || !mapRef.current) return;
 
         const defaultCenter = { lat: 19.0760, lng: 72.8777 };
         const mapInstance = new (window as any).google.maps.Map(mapRef.current, {
@@ -50,20 +68,38 @@ export function LiveTrackingMap({
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
+          zoomControl: true,
+          styles: [
+            {
+              featureType: "poi",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }]
+            }
+          ]
         });
 
-        setMap(mapInstance);
-        setIsLoading(false);
+        mapInstanceRef.current = mapInstance;
+        
+        if (mounted) {
+          setIsLoading(false);
+          setMapReady(true);
+        }
       } catch (err) {
         console.error("Error loading Google Maps:", err);
-        setError("Failed to load map");
-        setIsLoading(false);
+        if (mounted) {
+          setError("Failed to load map");
+          setIsLoading(false);
+        }
       }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (!map || vendorLatitude === null || vendorLongitude === null) return;
+    if (!mapReady || !mapInstanceRef.current || vendorLatitude === null || vendorLongitude === null) return;
 
     const vendorPosition = {
       lat: Number(vendorLatitude),
@@ -72,13 +108,13 @@ export function LiveTrackingMap({
 
     const google = (window as any).google;
 
-    if (vendorMarker) {
-      vendorMarker.setPosition(vendorPosition);
-      map.panTo(vendorPosition);
+    if (vendorMarkerRef.current) {
+      vendorMarkerRef.current.setPosition(vendorPosition);
+      mapInstanceRef.current.panTo(vendorPosition);
     } else {
       const marker = new google.maps.Marker({
         position: vendorPosition,
-        map: map,
+        map: mapInstanceRef.current,
         title: "Vendor Location",
         animation: google.maps.Animation.BOUNCE,
         icon: {
@@ -91,17 +127,20 @@ export function LiveTrackingMap({
         },
       });
 
-      setVendorMarker(marker);
-      map.setCenter(vendorPosition);
+      vendorMarkerRef.current = marker;
+      mapInstanceRef.current.setCenter(vendorPosition);
     }
-  }, [map, vendorLatitude, vendorLongitude, vendorMarker]);
+  }, [mapReady, vendorLatitude, vendorLongitude]);
 
   if (isLoading) {
     return (
       <Card className="p-8">
-        <div className="flex items-center justify-center gap-2 text-muted-foreground">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-green-600 border-t-transparent"></div>
-          <span>Loading map...</span>
+        <div className="flex flex-col items-center justify-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-3 border-green-600 border-t-transparent"></div>
+          <div className="text-center">
+            <p className="font-medium text-foreground">Loading map...</p>
+            <p className="text-sm text-muted-foreground mt-1">This may take a few seconds</p>
+          </div>
         </div>
       </Card>
     );
