@@ -5,6 +5,7 @@ import {
   vendors, 
   bookings, 
   bookingItems,
+  reviews,
   type User,
   type InsertUser,
   type Category,
@@ -14,9 +15,11 @@ import {
   type Booking,
   type InsertBooking,
   type BookingItem,
-  type InsertBookingItem
+  type InsertBookingItem,
+  type Review,
+  type InsertReview
 } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, avg, sql as drizzleSql } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -48,6 +51,12 @@ export interface IStorage {
   deleteBooking(bookingId: string): Promise<void>;
   cancelBooking(bookingId: string): Promise<Booking | undefined>;
   updateBooking(bookingId: string, booking: Partial<InsertBooking>, items?: InsertBookingItem[]): Promise<Booking | undefined>;
+
+  // Review management
+  createReview(review: InsertReview): Promise<Review>;
+  getReviewsByVendor(vendorId: string): Promise<(Review & { customer: User })[]>;
+  getReviewByBooking(bookingId: string): Promise<Review | undefined>;
+  getVendorAverageRating(vendorId: string): Promise<number>;
 }
 
 export class DbStorage implements IStorage {
@@ -306,6 +315,40 @@ export class DbStorage implements IStorage {
     }
     
     return result[0];
+  }
+
+  // Review methods
+  async createReview(review: InsertReview): Promise<Review> {
+    const result = await db.insert(reviews).values(review).returning();
+    return result[0];
+  }
+
+  async getReviewsByVendor(vendorId: string): Promise<(Review & { customer: User })[]> {
+    const result = await db.select()
+      .from(reviews)
+      .leftJoin(users, eq(reviews.customerId, users.id))
+      .where(eq(reviews.vendorId, vendorId))
+      .orderBy(desc(reviews.createdAt));
+    
+    return result.map((row: any) => ({
+      ...row.reviews,
+      customer: row.users!
+    }));
+  }
+
+  async getReviewByBooking(bookingId: string): Promise<Review | undefined> {
+    const result = await db.select()
+      .from(reviews)
+      .where(eq(reviews.bookingId, bookingId));
+    return result[0];
+  }
+
+  async getVendorAverageRating(vendorId: string): Promise<number> {
+    const result = await db.select({ avgRating: avg(reviews.rating) })
+      .from(reviews)
+      .where(eq(reviews.vendorId, vendorId));
+    
+    return result[0]?.avgRating ? Number(result[0].avgRating) : 0;
   }
 }
 
