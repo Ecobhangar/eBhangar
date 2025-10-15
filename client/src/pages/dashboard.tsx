@@ -5,6 +5,7 @@ import { StatCard } from "@/components/StatCard";
 import { BookingCard } from "@/components/BookingCard";
 import { VendorCard } from "@/components/VendorCard";
 import { VendorReviews } from "@/components/VendorReviews";
+import { RatingModal } from "@/components/RatingModal";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +29,7 @@ interface BookingItem {
 
 interface Booking {
   id: string;
+  customerId: string;
   customerName: string;
   customerPhone: string;
   customerAddress: string;
@@ -36,6 +38,7 @@ interface Booking {
   state?: string | null;
   totalValue: string;
   status: "pending" | "assigned" | "completed";
+  vendorId?: string | null;
   createdAt: string;
   completedAt?: string | null;
   items: BookingItem[];
@@ -53,8 +56,47 @@ interface Vendor {
   };
 }
 
+function CheckReviewButton({ 
+  bookingId, 
+  vendorId, 
+  onRate 
+}: { 
+  bookingId: string; 
+  vendorId: string; 
+  onRate: () => void;
+}) {
+  const { data: existingReview, isLoading } = useQuery({
+    queryKey: ["/api/reviews/booking", bookingId],
+  });
+
+  if (isLoading) {
+    return <Button variant="outline" disabled className="w-full">Loading...</Button>;
+  }
+
+  if (existingReview) {
+    return (
+      <Button variant="outline" disabled className="w-full" data-testid={`button-review-submitted-${bookingId}`}>
+        Review Submitted ✓
+      </Button>
+    );
+  }
+
+  return (
+    <Button 
+      variant="default" 
+      className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700"
+      onClick={onRate}
+      data-testid={`button-rate-pickup-${bookingId}`}
+    >
+      ⭐ Rate This Pickup
+    </Button>
+  );
+}
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("customer");
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [selectedBookingForRating, setSelectedBookingForRating] = useState<{ bookingId: string; vendorId: string } | null>(null);
   const { user, signOut } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -274,26 +316,37 @@ export default function Dashboard() {
               ) : (
                 <div className="grid gap-6">
                   {bookings.map((booking) => (
-                    <BookingCard 
-                      key={booking.id} 
-                      id={booking.id}
-                      customerName={booking.customerName}
-                      phone={booking.customerPhone}
-                      address={booking.customerAddress}
-                      items={booking.items.map(item => ({ 
-                        category: item.categoryName, 
-                        quantity: item.quantity 
-                      }))}
-                      totalValue={parseFloat(booking.totalValue)}
-                      status={booking.status}
-                      date={new Date(booking.createdAt)}
-                      completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
-                      showActions={true}
-                      vendorInfo={booking.vendor}
-                      onDelete={handleDeleteBooking}
-                      onEdit={handleEditBooking}
-                      onCancel={handleCancelBooking}
-                    />
+                    <div key={booking.id} className="space-y-2">
+                      <BookingCard 
+                        id={booking.id}
+                        customerName={booking.customerName}
+                        phone={booking.customerPhone}
+                        address={booking.customerAddress}
+                        items={booking.items.map(item => ({ 
+                          category: item.categoryName, 
+                          quantity: item.quantity 
+                        }))}
+                        totalValue={parseFloat(booking.totalValue)}
+                        status={booking.status}
+                        date={new Date(booking.createdAt)}
+                        completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
+                        showActions={true}
+                        vendorInfo={booking.vendor}
+                        onDelete={handleDeleteBooking}
+                        onEdit={handleEditBooking}
+                        onCancel={handleCancelBooking}
+                      />
+                      {booking.status === "completed" && booking.vendorId && (
+                        <CheckReviewButton 
+                          bookingId={booking.id} 
+                          vendorId={booking.vendorId}
+                          onRate={() => {
+                            setSelectedBookingForRating({ bookingId: booking.id, vendorId: booking.vendorId! });
+                            setRatingModalOpen(true);
+                          }}
+                        />
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
@@ -459,6 +512,20 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Rating Modal */}
+      {selectedBookingForRating && (
+        <RatingModal
+          open={ratingModalOpen}
+          onOpenChange={setRatingModalOpen}
+          bookingId={selectedBookingForRating.bookingId}
+          vendorId={selectedBookingForRating.vendorId}
+          onSuccess={() => {
+            setSelectedBookingForRating(null);
+            queryClient.invalidateQueries({ queryKey: ["/api/reviews/booking", selectedBookingForRating.bookingId] });
+          }}
+        />
+      )}
     </div>
   );
 }
