@@ -36,6 +36,9 @@ Preferred communication style: Simple, everyday language.
 -   **Vendor Features:** View assigned pickups, mark pickups as completed, track active pickup count, live location sharing (geolocation API updates booking coordinates).
 -   **Legal & Info Section:** Five legal pages (Terms & Conditions, Privacy Policy, Disclaimer, Vendor Onboarding Policy, Contact/Grievance) accessible from footer, consistent branding, responsive design.
 
+### Performance Optimizations
+-   **Google Maps Loading:** Singleton pattern ensures Google Maps API (`setOptions` and `importLibrary`) is initialized only once per session, eliminating duplicate API calls and console warnings. `mapReady` state ensures vendor markers render correctly even when coordinates are available before map initialization. Enhanced loading UI with descriptive messages improves user experience during map initialization.
+
 ## External Dependencies
 
 ### Third-Party Services
