@@ -104,6 +104,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/vendors/me", authenticateUser, requireRole("vendor"), async (req, res) => {
+    try {
+      const vendor = await storage.getVendorByUserId(req.user!.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor profile not found" });
+      }
+      res.json(vendor);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/vendors", authenticateUser, requireRole("admin"), async (req, res) => {
     try {
       const { userId, location, pinCode } = req.body;

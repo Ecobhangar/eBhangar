@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { BookingCard } from "@/components/BookingCard";
 import { VendorCard } from "@/components/VendorCard";
+import { VendorReviews } from "@/components/VendorReviews";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,6 +72,11 @@ export default function Dashboard() {
   const { data: vendors = [] } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors"],
     enabled: !!user && (currentUser?.role === "admin"),
+  });
+
+  const { data: currentVendor } = useQuery<{ id: string }>({
+    queryKey: ["/api/vendors/me"],
+    enabled: !!user && (currentUser?.role === "vendor"),
   });
 
   const assignVendorMutation = useMutation({
@@ -430,6 +436,7 @@ export default function Dashboard() {
                       vendorInfo={booking.vendor}
                     />
                     <Button 
+                      data-testid={`button-complete-booking-${booking.id}`}
                       className="mt-2 w-full"
                       onClick={() => updateStatusMutation.mutate({ bookingId: booking.id, status: "completed" })}
                     >
@@ -442,6 +449,13 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+
+            {/* Vendor Reviews Section */}
+            {currentVendor && (
+              <div className="mt-8">
+                <VendorReviews vendorId={currentVendor.id} />
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>
