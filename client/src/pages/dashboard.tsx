@@ -6,6 +6,7 @@ import { BookingCard } from "@/components/BookingCard";
 import { VendorCard } from "@/components/VendorCard";
 import { VendorReviews } from "@/components/VendorReviews";
 import { RatingModal } from "@/components/RatingModal";
+import { LiveTrackingMap } from "@/components/LiveTrackingMap";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +20,7 @@ import {
   Clock, 
   IndianRupee,
   Plus,
+  MapPin,
   User as UserIcon
 } from "lucide-react";
 
@@ -39,6 +41,8 @@ interface Booking {
   totalValue: string;
   status: "pending" | "assigned" | "completed";
   vendorId?: string | null;
+  vendorLatitude?: string | null;
+  vendorLongitude?: string | null;
   createdAt: string;
   completedAt?: string | null;
   items: BookingItem[];
@@ -89,6 +93,84 @@ function CheckReviewButton({
       data-testid={`button-rate-pickup-${bookingId}`}
     >
       ⭐ Rate This Pickup
+    </Button>
+  );
+}
+
+function ShareLocationButton({ bookingId }: { bookingId: string }) {
+  const { toast } = useToast();
+  const [isSharing, setIsSharing] = useState(false);
+
+  const updateLocationMutation = useMutation({
+    mutationFn: async ({ latitude, longitude }: { latitude: number; longitude: number }) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/location`, {
+        latitude,
+        longitude
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Location shared",
+        description: "Customer can now see your live location",
+      });
+      setIsSharing(false);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to share location",
+        description: "Please try again",
+        variant: "destructive",
+      });
+      setIsSharing(false);
+    }
+  });
+
+  const handleShareLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Your browser doesn't support location sharing",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSharing(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        updateLocationMutation.mutate({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        toast({
+          title: "Location access denied",
+          description: "Please enable location access to share your location",
+          variant: "destructive",
+        });
+        setIsSharing(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  return (
+    <Button
+      variant="outline"
+      className="w-full"
+      onClick={handleShareLocation}
+      disabled={isSharing || updateLocationMutation.isPending}
+      data-testid={`button-share-location-${bookingId}`}
+    >
+      <MapPin className="w-4 h-4 mr-2" />
+      {isSharing || updateLocationMutation.isPending ? "Sharing location..." : "Share Live Location"}
     </Button>
   );
 }
@@ -316,7 +398,7 @@ export default function Dashboard() {
               ) : (
                 <div className="grid gap-6">
                   {bookings.map((booking) => (
-                    <div key={booking.id} className="space-y-2">
+                    <div key={booking.id} className="space-y-4">
                       <BookingCard 
                         id={booking.id}
                         customerName={booking.customerName}
@@ -336,6 +418,16 @@ export default function Dashboard() {
                         onEdit={handleEditBooking}
                         onCancel={handleCancelBooking}
                       />
+                      
+                      {booking.status === "assigned" && (
+                        <LiveTrackingMap
+                          vendorLatitude={booking.vendorLatitude ? Number(booking.vendorLatitude) : null}
+                          vendorLongitude={booking.vendorLongitude ? Number(booking.vendorLongitude) : null}
+                          customerAddress={booking.customerAddress}
+                          bookingId={booking.id}
+                        />
+                      )}
+                      
                       {booking.status === "completed" && booking.vendorId && (
                         <CheckReviewButton 
                           bookingId={booking.id} 
@@ -472,7 +564,7 @@ export default function Dashboard() {
               <h2 className="text-2xl font-semibold mb-6">Assigned Pickups</h2>
               <div className="grid gap-6">
                 {bookings.filter(b => b.status === "assigned").map((booking) => (
-                  <div key={booking.id}>
+                  <div key={booking.id} className="space-y-2">
                     <BookingCard 
                       id={booking.id}
                       customerName={booking.customerName}
@@ -488,9 +580,10 @@ export default function Dashboard() {
                       completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                       vendorInfo={booking.vendor}
                     />
+                    <ShareLocationButton bookingId={booking.id} />
                     <Button 
                       data-testid={`button-complete-booking-${booking.id}`}
-                      className="mt-2 w-full"
+                      className="w-full"
                       onClick={() => updateStatusMutation.mutate({ bookingId: booking.id, status: "completed" })}
                     >
                       Mark as Completed
