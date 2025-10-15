@@ -68,7 +68,7 @@ export const bookingItems = pgTable("booking_items", {
 
 export const reviews = pgTable("reviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull().unique(),
   customerId: varchar("customer_id").references(() => users.id).notNull(),
   vendorId: varchar("vendor_id").references(() => vendors.id).notNull(),
   rating: integer("rating").notNull(),
