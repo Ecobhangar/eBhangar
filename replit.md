@@ -2,7 +2,7 @@
 
 ## Overview
 
-eBhangar is a web-based service platform for managing scrap collection and recycling services. The application connects customers who want to dispose of recyclable items (electronics, metals, plastics, paper, etc.) with verified vendors who collect and pay for these materials. The platform features real-time booking management, vendor assignment, and order tracking with an eco-friendly design theme.
+eBhangar is a web-based service platform designed to streamline scrap collection and recycling. It connects customers wishing to dispose of recyclable materials (electronics, metals, plastics, paper, etc.) with verified vendors for collection and payment. The platform facilitates real-time booking management, intelligent vendor assignment, and order tracking, all within an eco-friendly design aesthetic. The project aims to capitalize on the growing demand for convenient and sustainable waste management solutions.
 
 ## User Preferences
 
@@ -11,321 +11,45 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend Architecture
-
-**Technology Stack:**
-- **Framework:** React with TypeScript using Vite as the build tool
-- **Routing:** Wouter (lightweight React router)
-- **State Management:** TanStack Query (React Query) for server state
-- **UI Components:** Radix UI primitives with shadcn/ui styling system
-- **Styling:** Tailwind CSS with custom design tokens
-- **Authentication:** Firebase Authentication (phone-based OTP)
-
-**Design System:**
-The application implements a hybrid design approach combining Material Design principles with service platform patterns (similar to Uber/Swiggy). Key design decisions include:
-- Green eco-theme with HSL color values for consistency across light/dark modes
-- Typography using Inter (UI/body) and Poppins (headers) from Google Fonts
-- Component-based architecture with reusable UI elements
-- Mobile-first responsive design
-- Custom hover/active states using CSS elevation patterns
-
-**Key Frontend Patterns:**
-- Context-based authentication state management (AuthContext)
-- Theme provider for light/dark mode switching
-- Protected routes requiring authentication
-- Custom hooks for responsive breakpoints and toast notifications
-- Data fetching with automatic authentication headers
+-   **Technology Stack:** React with TypeScript (Vite), Wouter for routing, TanStack Query for state, Radix UI + shadcn/ui for components, Tailwind CSS for styling.
+-   **Design System:** Hybrid approach combining Material Design with service platform patterns (e.g., Uber). Features an eco-friendly green theme (HSL colors), Inter and Poppins fonts, component-based architecture, and mobile-first responsive design.
+-   **Key Patterns:** Context-based authentication, theme provider, protected routes, custom hooks, and data fetching with auth headers.
 
 ### Backend Architecture
-
-**Technology Stack:**
-- **Runtime:** Node.js with Express.js
-- **Language:** TypeScript (ES Modules)
-- **Database ORM:** Drizzle ORM
-- **Database:** PostgreSQL (Neon serverless)
-- **Session Management:** connect-pg-simple for PostgreSQL-backed sessions
-
-**API Structure:**
-RESTful API endpoints organized by resource type:
-- User management (`/api/users/*`)
-- Category operations (`/api/categories/*`)
-- Vendor management (`/api/vendors/*`)
-- Booking/order operations (`/api/bookings/*`)
-
-**Middleware Architecture:**
-- Authentication middleware validates Firebase phone numbers from request headers
-- Auto-creates user records on first login
-- Role-based access control (customer, vendor, admin)
-- Request/response logging for API endpoints
-- Error handling with appropriate HTTP status codes
-
-**Data Access Layer:**
-The storage pattern implements a repository/interface pattern:
-- `IStorage` interface defines all data operations
-- `DbStorage` class implements the interface using Drizzle ORM
-- Supports transactions for complex operations (booking creation with items)
-- Relational data fetching with joins
+-   **Technology Stack:** Node.js with Express.js, TypeScript (ES Modules), Drizzle ORM, PostgreSQL (Neon serverless), connect-pg-simple for sessions.
+-   **API Structure:** RESTful APIs for users, categories, vendors, and bookings.
+-   **Middleware:** Authentication (Firebase phone number validation), auto-user creation, role-based access control, request/response logging, and error handling.
+-   **Data Access Layer:** Repository pattern (`IStorage` interface, `DbStorage` implementation with Drizzle ORM) supporting transactions.
 
 ### Database Schema
-
-**Core Tables:**
-1. **users** - Stores user accounts with phone-based authentication
-   - Fields: id (UUID), phoneNumber (unique), name, address, pinCode, district, state, role (customer/vendor/admin)
-   - Auto-generated UUIDs for primary keys
-   - Address fields (address, pinCode, district, state) are nullable and used for saved address feature
-
-2. **categories** - Scrap item types with pricing
-   - Fields: id, name (unique), unit (kg/unit), minRate, maxRate, icon
-   - Supports dynamic pricing ranges
-
-3. **vendors** - Vendor profiles linked to user accounts
-   - Fields: id, userId (FK to users), location, pinCode, district (required), state (required), aadharNumber, panNumber, active (boolean), activePickups counter
-   - One-to-one relationship with users
-   - pinCode field enables location-based vendor assignment
-   - district and state: Required fields for complete vendor address
-   - aadharNumber: Optional 12-digit Aadhar card number
-   - panNumber: Optional PAN card in format ABCDE1234F
-   - active flag controls vendor availability (default: true)
-
-4. **bookings** - Customer orders/pickup requests
-   - Fields: id, customerId (FK), customer details (denormalized: name, phone, address, pinCode, district, state), totalValue, status, vendorId (FK)
-   - Status workflow: pending → assigned → completed
-   - Tracks timestamps for creation and completion
-   - Location fields (pinCode, district, state) nullable for backward compatibility
-
-5. **bookingItems** - Line items for each booking
-   - Fields: id, bookingId (FK), categoryId (FK), categoryName (denormalized), quantity, estimatedValue
-   - Supports multiple items per booking
-
-**Design Decisions:**
-- UUID primary keys for security and distributed ID generation
-- Denormalized customer data in bookings for historical accuracy
-- Status-based workflow for order lifecycle
-- Decimal types for monetary values to maintain precision
-- Timestamps for audit trails
+-   **Core Tables:** `users` (phone-based auth, role), `categories` (scrap types, pricing), `vendors` (linked to users, location, KYC), `bookings` (customer orders, denormalized customer data, status, vendor FK), `bookingItems` (items per booking).
+-   **Design Decisions:** UUID primary keys, denormalization for historical accuracy, status-based workflow, decimal types for precision, timestamps for audit.
 
 ### Authentication & Authorization
+-   **Authentication Flow:** Firebase Authentication for phone number + OTP on frontend, `x-user-phone` header for backend validation, auto-creates user on first login.
+-   **Authorization Levels:** Customer (create/view own bookings), Vendor (view assigned, update status), Admin (manage all resources, assign vendors).
+-   **Security:** Phone number as primary ID, session-based auth, role-based middleware, auto-provisioning.
 
-**Authentication Flow:**
-1. Frontend uses Firebase Authentication for phone number verification
-2. User enters phone number → receives OTP → verifies code
-3. Firebase returns authenticated user with phone number
-4. Phone number sent in `x-user-phone` header on all API requests
-5. Backend validates and auto-creates user records on first login
-
-**Authorization Levels:**
-- **Customer:** Can create bookings, view own bookings
-- **Vendor:** Can view assigned bookings, update booking status
-- **Admin:** Can manage all resources, assign vendors, change user roles
-
-**Security Considerations:**
-- Phone number as primary identifier (no passwords)
-- Session-based authentication with PostgreSQL backing
-- Role-based middleware for protected routes
-- Auto-provisioning reduces friction for new users
+### Feature Specifications
+-   **Customer Features:** Profile management (saved address), simplified booking flow (auto-uses profile address), category selection, estimated value display, view booking history with status-based actions (edit/delete pending, cancel assigned, view completed), privacy protection (no vendor details for customers), live pickup tracking (Google Maps shows vendor location for assigned bookings), rating & review system (rate completed pickups 1-5 stars with optional text review).
+-   **Admin Features:** View all bookings, smart vendor assignment (pin code-based, displays vendor name/phone), track statuses, manage vendor assignments, vendor onboarding system (form with validation for KYC, address, active status, auto-user creation), optional email notifications.
+-   **Vendor Features:** View assigned pickups, mark pickups as completed, track active pickup count, live location sharing (geolocation API updates booking coordinates).
+-   **Legal & Info Section:** Five legal pages (Terms & Conditions, Privacy Policy, Disclaimer, Vendor Onboarding Policy, Contact/Grievance) accessible from footer, consistent branding, responsive design.
 
 ## External Dependencies
 
 ### Third-Party Services
-
-**Firebase (Authentication):**
-- Purpose: Phone number-based OTP authentication
-- Configuration: Requires API key, auth domain, project ID in environment variables
-- Implementation: Client-side Firebase SDK with reCAPTCHA verification
-
-**Neon (PostgreSQL Database):**
-- Purpose: Serverless PostgreSQL database hosting
-- Configuration: CONNECTION_STRING via DATABASE_URL environment variable
-- Features: WebSocket connections for serverless compatibility
-
-**Google Fonts:**
-- Purpose: Typography (Inter and Poppins font families)
-- Implementation: Loaded via CDN in HTML head
+-   **Firebase:** Phone number-based OTP authentication.
+-   **Neon:** Serverless PostgreSQL database hosting.
+-   **Google Fonts:** Typography (Inter, Poppins).
 
 ### Key NPM Packages
-
-**UI & Components:**
-- @radix-ui/* - Accessible component primitives (dialogs, dropdowns, etc.)
-- shadcn/ui - Pre-built component library built on Radix
-- tailwindcss - Utility-first CSS framework
-- lucide-react - Icon library
-
-**Data & State:**
-- @tanstack/react-query - Server state management and caching
-- drizzle-orm - Type-safe SQL ORM
-- drizzle-zod - Schema validation integration
-
-**Build & Development:**
-- vite - Fast build tool and dev server
-- esbuild - Server-side bundling
-- typescript - Type safety across stack
-
-**Session & Storage:**
-- express-session - Session middleware
-- connect-pg-simple - PostgreSQL session store
-- ws - WebSocket support for Neon
+-   **UI & Components:** `@radix-ui/*`, `shadcn/ui`, `tailwindcss`, `lucide-react`.
+-   **Data & State:** `@tanstack/react-query`, `drizzle-orm`, `drizzle-zod`.
+-   **Build & Development:** `vite`, `esbuild`, `typescript`.
+-   **Session & Storage:** `express-session`, `connect-pg-simple`, `ws`.
 
 ### Environment Configuration
-
-Required environment variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `VITE_FIREBASE_API_KEY` - Firebase project API key
-- `VITE_FIREBASE_AUTH_DOMAIN` - Firebase auth domain
-- `VITE_FIREBASE_PROJECT_ID` - Firebase project identifier
-- Additional Firebase config values for messaging and storage
-
-**Important:** Firebase Phone Authentication must be enabled in your Firebase Console:
-1. Go to Firebase Console → Authentication → Sign-in method
-2. Enable "Phone" provider
-3. Configure authorized domains if needed
-4. Ensure environment variables contain valid Firebase credentials
-
-## Current Implementation Status
-
-### ✅ Completed Features
-
-**Core Functionality:**
-- Landing page with hero section and category showcase
-- Firebase phone authentication with OTP verification
-- Role-based access control (Customer, Admin, Vendor)
-- 9 scrap categories seeded (Old AC, Refrigerator, Washing Machine, Iron, Copper, Plastic, Paper, Books, Clothes)
-
-**Customer Features:**
-- **Profile Management:**
-  - Dedicated Profile page to save address details (name, address, pin code, district, state)
-  - Accessible via "Profile" button in dashboard header
-  - Required before creating any booking
-  - Backend validation ensures:
-    - All fields are non-empty
-    - Pin code is exactly 6 numeric digits (regex: `/^\d{6}$/`)
-    - Data integrity across platform
-- **Simplified Booking Flow:**
-  - Automatically uses saved profile address for pickup
-  - No repetitive address entry on booking page
-  - If profile incomplete, redirects to Profile page with clear message
-  - **Category Selection:** Dropdown with quantity input
-  - Auto-calculated estimated value displayed before submission
-  - "New Booking" button on customer dashboard
-  - Can edit profile anytime via "Edit Profile" button on booking page
-- View personal booking history
-- **Status-based actions:**
-  - **Pending bookings:** Edit and Delete options available
-  - **Assigned bookings:** Cancel option available (returns to pending status)
-  - **Completed bookings:** View only, no actions
-- **Privacy Protection:**
-  - Customers do NOT see vendor name or phone number
-  - Completed bookings show: "Pickup done on [date time]"
-  - Vendor details only visible to admin users
-
-**Admin Features:**
-- View all bookings across platform
-- **Smart Vendor Assignment:** 
-  - Dropdown shows only vendors from same pin code as booking
-  - **Displays vendor name AND phone number** in dropdown for easy identification
-  - Filters vendors by location for better service matching
-  - Assign vendors to pending bookings
-- Track booking statuses (pending → assigned → completed)
-- **Vendor Information Display:**
-  - Assigned bookings show "Assigned to: [Vendor Name] • [Phone]"
-  - Completed bookings show "Completed by: [Vendor Name] • [Phone]"
-  - Backend automatically fetches vendor details with all bookings
-- Manage vendor assignments
-- **Vendor Onboarding System:**
-  - Dedicated vendor onboarding form at `/admin/vendors/onboard`
-  - Create new vendors with complete details
-  - Form fields (in order): Vendor Name, Phone Number, PAN Card (optional), Aadhar Card (optional), Area/Locality, Pincode, District, State, Active/Inactive status toggle (default: Active)
-  - Document validation:
-    - Aadhar: Exactly 12 digits (optional)
-    - PAN: Format ABCDE1234F (5 letters, 4 digits, 1 letter, optional)
-  - Address requirements:
-    - District and State are required fields
-    - Pincode: exactly 6 digits
-  - Automatic user account creation with vendor role
-  - Duplicate phone number validation
-  - Success confirmation with auto-redirect
-  - "Add Vendor" button in admin dashboard
-- **Email Notifications:** Automatic email alerts for new bookings (optional setup)
-  - Admin WhatsApp: +919226255355 (displayed in emails)
-  - Configure SMTP in Replit Secrets (see EMAIL_SETUP.md)
-
-**Vendor Features:**
-- View assigned pickups
-- Mark bookings as completed
-- Track active pickup count
-
-**Technical Implementation:**
-- PostgreSQL database with Drizzle ORM
-- RESTful API with Express.js
-- Authentication middleware with Firebase integration
-- Auto-user creation on first login
-- Transaction support for complex operations
-- Responsive design with Tailwind CSS
-
-### 🎯 How to Use the Application
-
-1. **Login:** Navigate to `/login` and authenticate with phone number + OTP
-2. **Setup Profile:** (First-time users) Go to `/profile` from dashboard and save your address details
-3. **Create Booking:** Go to `/bookings/new` to schedule a pickup (uses saved profile address automatically)
-4. **View Dashboard:** Access `/dashboard` for role-specific features
-5. **Admin Actions:** Assign vendors to pending bookings based on pin code
-6. **Vendor Actions:** Mark assigned pickups as completed
-
-### 📧 Notification System
-
-**In-App Notifications (Active):**
-- Admin dashboard shows all new bookings in real-time
-- Toast notifications for all booking actions
-- Live status updates without page refresh
-
-**Email Notifications (Optional):**
-- Automatic email alerts to admin when customers create bookings
-- Email includes: customer details, items, total value, booking ID
-- Admin WhatsApp (+919226255355) displayed in all emails
-- Configure SMTP credentials in Replit Secrets (see `EMAIL_SETUP.md`)
-- Free setup with Gmail, Outlook, SendGrid, or Mailgun
-
-### 📋 Legal & Info Section
-
-**5 Legal Pages Available:**
-All pages are accessible from the landing page footer with clean, eco-friendly design using green accents and lucide-react icons.
-
-1. **Terms & Conditions** (`/legal/terms`)
-   - Platform usage terms
-   - User responsibilities
-   - Important disclaimers about payment and services
-
-2. **Privacy Policy** (`/legal/privacy`)
-   - Data collection and usage practices
-   - Privacy protections and commitments
-   - Contact email for privacy concerns
-
-3. **Disclaimer** (`/legal/disclaimer`)
-   - Platform liability limitations
-   - Vendor responsibility clarifications
-   - Service scope definition
-
-4. **Vendor Onboarding Policy** (`/legal/vendor-policy`)
-   - Vendor compliance requirements
-   - Ethical recycling standards
-   - Service quality expectations
-
-5. **Contact / Grievance** (`/legal/contact`)
-   - Support email: support@ebhangar.com
-   - Grievance officer information
-   - Response time commitment (48 hours)
-
-**Design Features:**
-- Shared layout with eBhangar branding
-- Responsive card-based design with soft shadows
-- Footer navigation linking all legal pages
-- Home button in header returns to landing page
-- All icons from lucide-react (FileText, Shield, Scale, Handshake, Phone, Leaf)
-
-### 🔄 Future Enhancements (Not Implemented)
-
-- WhatsApp Business API integration (currently using email + in-app)
-- SMS notifications via Twilio
-- Real-time vendor location tracking
-- Payment integration
-- Rating and review system
-- Analytics dashboard
-- Push notifications
+-   `DATABASE_URL` (PostgreSQL connection string)
+-   `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` (Firebase config)
+-   `VITE_GOOGLE_MAPS_API_KEY` (Google Maps JavaScript API for live tracking)
