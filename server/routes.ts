@@ -608,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const netAmount = parseFloat(booking.totalValue) - platformFee;
 
       // Generate invoice number
-      const invoiceNumber = `INV-${booking.referenceId?.replace('EBH-AWB-', '')}`;
+      const invoiceNumber = `INV-${booking.referenceId?.replace('EBH-MUM-', '')}`;
 
       const invoice = await storage.createInvoice({
         bookingId: booking.id,
