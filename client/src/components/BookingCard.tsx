@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Phone, Trash2, Edit, XCircle } from "lucide-react";
+import { Calendar, MapPin, Phone, Trash2, Edit, XCircle, Circle } from "lucide-react";
 import { format } from "date-fns";
 import {
   Select,
@@ -34,17 +34,17 @@ interface BookingCardProps {
 }
 
 const statusConfig = {
-  pending: { color: "bg-chart-3 text-white", label: "Pending" },
-  accepted: { color: "bg-blue-600 text-white", label: "Accepted" },
-  rejected: { color: "bg-red-600 text-white", label: "Rejected" },
-  on_the_way: { color: "bg-chart-4 text-white", label: "On the Way" },
-  completed: { color: "bg-primary text-primary-foreground", label: "Completed" },
-  pickup_scheduled: { color: "bg-blue-500 text-white", label: "Pickup Scheduled" },
+  pending: { color: "bg-chart-3 text-white", label: "Pending", iconColor: "text-orange-400" },
+  accepted: { color: "bg-blue-600 text-white", label: "Accepted", iconColor: "text-blue-400" },
+  rejected: { color: "bg-red-600 text-white", label: "Rejected", iconColor: "text-red-400" },
+  on_the_way: { color: "bg-chart-4 text-white", label: "On the Way", iconColor: "text-green-400" },
+  completed: { color: "bg-primary text-primary-foreground", label: "Completed", iconColor: "text-green-400" },
+  pickup_assigned: { color: "bg-blue-500 text-white", label: "Pickup Assigned", iconColor: "text-blue-400" },
 };
 
 export function BookingCard({ id, referenceId, customerName, phone, address, items, totalValue, paymentMode, status, date, completedAt, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false, vendorInfo }: BookingCardProps) {
-  const displayStatus = (status === "pending" && vendorInfo) ? "pickup_scheduled" : status;
-  const config = statusConfig[displayStatus];
+  const displayStatus = (status === "pending" && vendorInfo) ? "pickup_assigned" : status;
+  const config = statusConfig[displayStatus] || statusConfig.pending;
   
   const getBorderColor = () => {
     switch (displayStatus) {
@@ -53,7 +53,7 @@ export function BookingCard({ id, referenceId, customerName, phone, address, ite
       case 'rejected': return 'border-l-red-600';
       case 'on_the_way': return 'border-l-chart-4';
       case 'completed': return 'border-l-primary';
-      case 'pickup_scheduled': return 'border-l-blue-500';
+      case 'pickup_assigned': return 'border-l-blue-500';
       default: return 'border-l-gray-400';
     }
   };
@@ -82,7 +82,10 @@ export function BookingCard({ id, referenceId, customerName, phone, address, ite
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className={config.color} data-testid={`badge-status-${id}`}>{config.label}</Badge>
+          <Badge className={config.color} data-testid={`badge-status-${id}`}>
+            <Circle className={`w-2 h-2 mr-1.5 fill-current ${config.iconColor}`} />
+            {config.label}
+          </Badge>
           {showActions && (
             <>
               {status === "pending" && !vendorInfo && (
@@ -147,9 +150,9 @@ export function BookingCard({ id, referenceId, customerName, phone, address, ite
         )}
         {!isAdmin && status === "completed" && completedAt && (
           <div className="mt-3 pt-3 border-t">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span className="font-medium text-primary" data-testid={`text-pickup-done-${id}`}>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Calendar className="w-3 h-3" />
+              <span data-testid={`text-pickup-done-${id}`}>
                 Pickup done on {format(new Date(completedAt), "PPP 'at' p")}
               </span>
             </div>

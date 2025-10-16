@@ -50,6 +50,7 @@ interface Booking {
   state?: string | null;
   totalValue: string;
   paymentMode: "cash" | "upi";
+  paymentStatus: "unpaid" | "paid";
   status: "pending" | "accepted" | "rejected" | "on_the_way" | "completed";
   vendorId?: string | null;
   rejectionReason?: string | null;
@@ -241,6 +242,7 @@ function AcceptRejectDialog({
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("customer");
+  const [adminFilter, setAdminFilter] = useState<"all" | "pending" | "completed">("all");
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [selectedBookingForRating, setSelectedBookingForRating] = useState<{ bookingId: string; vendorId: string } | null>(null);
   const { user, signOut } = useAuth();
@@ -457,7 +459,7 @@ export default function Dashboard() {
                 gradient="from-green-500 to-emerald-600"
               />
               <StatCard 
-                title="Total Earned" 
+                title="Total Scrap Value" 
                 value={`₹${totalValue.toFixed(0)}`} 
                 icon={IndianRupee}
                 gradient="from-violet-500 to-purple-600"
@@ -551,7 +553,7 @@ export default function Dashboard() {
                 gradient="from-green-500 to-emerald-600"
               />
               <StatCard 
-                title="Total Revenue" 
+                title="Total Scrap Value Processed" 
                 value={`₹${totalValue.toFixed(0)}`} 
                 icon={IndianRupee}
                 gradient="from-violet-500 to-purple-600"
@@ -559,12 +561,44 @@ export default function Dashboard() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-semibold mb-6">All Bookings</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold">All Bookings</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant={adminFilter === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAdminFilter("all")}
+                    data-testid="button-filter-all"
+                  >
+                    All
+                  </Button>
+                  <Button
+                    variant={adminFilter === "pending" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAdminFilter("pending")}
+                    data-testid="button-filter-pending"
+                  >
+                    Pending Only
+                  </Button>
+                  <Button
+                    variant={adminFilter === "completed" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAdminFilter("completed")}
+                    data-testid="button-filter-completed"
+                  >
+                    Completed Only
+                  </Button>
+                </div>
+              </div>
               {bookingsLoading ? (
                 <p>Loading bookings...</p>
               ) : (
                 <div className="space-y-4">
-                  {bookings.map((booking) => {
+                  {bookings.filter(b => {
+                    if (adminFilter === "pending") return b.status === "pending";
+                    if (adminFilter === "completed") return b.status === "completed";
+                    return true;
+                  }).map((booking) => {
                     const filteredVendors = booking.pinCode 
                       ? vendors.filter(v => v.pinCode === booking.pinCode)
                       : vendors;
@@ -611,7 +645,7 @@ export default function Dashboard() {
                 {currentUser?.role === "admin" && " (Admin View)"}
               </h1>
               <p className="text-muted-foreground mt-1">
-                {currentUser?.role === "admin" ? "View all vendor pickups and performance" : "View and manage assigned pickups"}
+                Track your assigned pickups and earnings.
               </p>
             </div>
 
@@ -627,7 +661,7 @@ export default function Dashboard() {
               <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <StatCard 
-                title={currentUser?.role === "admin" ? "All Pending Pickups" : "Pending Pickups"}
+                title="Assigned Pickups"
                 value={bookings.filter(b => 
                   (b.status === "pending" || b.status === "accepted") && b.vendorId && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
@@ -636,16 +670,19 @@ export default function Dashboard() {
                 gradient="from-amber-500 to-orange-600"
               />
               <StatCard 
-                title={currentUser?.role === "admin" ? "All Completed" : "Completed Orders"}
-                value={bookings.filter(b => 
-                  b.status === "completed" && 
-                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
-                ).length} 
+                title="Completed Today"
+                value={bookings.filter(b => {
+                  if (b.status !== "completed") return false;
+                  if (currentUser?.role !== "admin" && b.vendorId !== currentVendor?.id) return false;
+                  const today = new Date();
+                  const completedDate = new Date(b.completedAt!);
+                  return completedDate.toDateString() === today.toDateString();
+                }).length} 
                 icon={CheckCircle}
                 gradient="from-green-500 to-emerald-600"
               />
               <StatCard 
-                title={currentUser?.role === "admin" ? "Total Payments" : "Total Payments"}
+                title="Total Earnings"
                 value={`₹${bookings.filter(b => 
                   b.status === "completed" && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)

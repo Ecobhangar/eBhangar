@@ -50,6 +50,7 @@ export const bookings = pgTable("bookings", {
   state: text("state"),
   totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(),
   paymentMode: text("payment_mode"), // cash, upi
+  paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid, paid
   status: text("status").notNull().default("pending"), // pending, accepted, rejected, on_the_way, completed
   rejectionReason: text("rejection_reason"),
   vendorId: varchar("vendor_id").references(() => vendors.id),

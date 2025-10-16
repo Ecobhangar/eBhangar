@@ -365,6 +365,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/bookings/:id/payment-status", authenticateUser, async (req, res) => {
+    try {
+      const { paymentStatus } = req.body;
+      
+      // Only admin and assigned vendor can update payment status
+      const booking = await storage.getBooking(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      if (req.user!.role !== "admin") {
+        if (req.user!.role === "vendor") {
+          const vendor = await storage.getVendorByUserId(req.user!.id);
+          if (!vendor || booking.vendorId !== vendor.id) {
+            return res.status(403).json({ error: "Access denied" });
+          }
+        } else {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const updatedBooking = await storage.updateBookingPaymentStatus(req.params.id, paymentStatus);
+      res.json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.delete("/api/bookings/:id", authenticateUser, async (req, res) => {
     try {
       const booking = await storage.getBooking(req.params.id);
