@@ -544,9 +544,9 @@ export default function Dashboard() {
               <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <StatCard 
-                title={currentUser?.role === "admin" ? "All Active Pickups" : "Active Pickups"}
+                title={currentUser?.role === "admin" ? "All Pending Pickups" : "Pending Pickups"}
                 value={bookings.filter(b => 
-                  (b.status === "accepted" || b.status === "on_the_way") && 
+                  b.status === "pending" && b.vendorId && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
                 ).length} 
                 icon={Package}
@@ -578,7 +578,7 @@ export default function Dashboard() {
               </h2>
               <div className="grid gap-6">
                 {bookings.filter(b => 
-                  (b.status === "accepted" || b.status === "on_the_way") && 
+                  b.status === "pending" && b.vendorId && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
                 ).map((booking) => (
                   <div key={booking.id} className="space-y-2">
@@ -612,7 +612,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {bookings.filter(b => 
-                  (b.status === "accepted" || b.status === "on_the_way") && 
+                  b.status === "pending" && b.vendorId && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
                 ).length === 0 && (
                   <p className="text-muted-foreground">No assigned pickups</p>
