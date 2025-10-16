@@ -33,7 +33,7 @@ Preferred communication style: Simple, everyday language.
 ### Feature Specifications
 -   **Customer Features:** Profile management (saved address), simplified booking flow (auto-uses profile address), category selection, estimated value display, view booking history with status-based actions (edit/delete pending, cancel assigned, view completed), privacy protection (no vendor details for customers), live pickup tracking (Google Maps shows vendor location for assigned bookings), rating & review system (rate completed pickups 1-5 stars with optional text review).
 -   **Admin Features:** View all bookings, smart vendor assignment (pin code-based, displays vendor name/phone), track statuses, manage vendor assignments, vendor onboarding system (form with validation for KYC, address, active status, auto-user creation), optional email notifications.
--   **Vendor Features:** View assigned pickups, mark pickups as completed, track active pickup count, live location sharing (geolocation API updates booking coordinates).
+-   **Vendor Features:** View assigned pickups (filtered by current vendor ID), mark pickups as completed, track active pickup count (vendor-specific stats), live location sharing (geolocation API updates booking coordinates for assigned bookings only), vendor reviews dashboard (displays all ratings and reviews received with average rating, star distribution chart, and individual review cards).
 -   **Legal & Info Section:** Five legal pages (Terms & Conditions, Privacy Policy, Disclaimer, Vendor Onboarding Policy, Contact/Grievance) accessible from footer, consistent branding, responsive design.
 
 ### Performance Optimizations
