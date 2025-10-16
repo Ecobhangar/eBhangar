@@ -107,37 +107,59 @@ function CheckReviewButton({
   );
 }
 
-function CompleteBookingDialog({ 
+function AcceptRejectDialog({ 
   bookingId, 
-  onComplete 
+  onAccept,
+  onReject 
 }: { 
   bookingId: string; 
-  onComplete: (paymentMode: "cash" | "upi") => void;
+  onAccept: (paymentMode: "cash" | "upi") => void;
+  onReject: (reason: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [acceptOpen, setAcceptOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"cash" | "upi">("cash");
+  const [rejectionReason, setRejectionReason] = useState("");
 
-  const handleComplete = () => {
-    onComplete(paymentMode);
-    setOpen(false);
+  const handleAccept = () => {
+    onAccept(paymentMode);
+    setAcceptOpen(false);
+  };
+
+  const handleReject = () => {
+    if (rejectionReason.trim()) {
+      onReject(rejectionReason);
+      setRejectOpen(false);
+      setRejectionReason("");
+    }
   };
 
   return (
-    <>
+    <div className="flex gap-2">
       <Button 
-        data-testid={`button-complete-booking-${bookingId}`}
-        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-        onClick={() => setOpen(true)}
+        data-testid={`button-reject-booking-${bookingId}`}
+        variant="outline"
+        className="flex-1 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+        onClick={() => setRejectOpen(true)}
       >
-        Mark as Completed
+        Reject
+      </Button>
+      
+      <Button 
+        data-testid={`button-accept-booking-${bookingId}`}
+        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+        onClick={() => setAcceptOpen(true)}
+      >
+        Accept
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent data-testid="dialog-complete-booking">
+      {/* Accept Dialog */}
+      <Dialog open={acceptOpen} onOpenChange={setAcceptOpen}>
+        <DialogContent data-testid="dialog-accept-booking">
           <DialogHeader>
-            <DialogTitle>Complete Pickup</DialogTitle>
+            <DialogTitle>Accept Pickup & Collect Payment</DialogTitle>
             <DialogDescription>
-              Please select the payment method used by the customer
+              Please select the payment method received from the customer
             </DialogDescription>
           </DialogHeader>
 
@@ -160,20 +182,60 @@ function CompleteBookingDialog({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} data-testid="button-cancel-complete">
+            <Button variant="outline" onClick={() => setAcceptOpen(false)} data-testid="button-cancel-accept">
               Cancel
             </Button>
             <Button 
-              onClick={handleComplete}
-              data-testid="button-confirm-complete"
+              onClick={handleAccept}
+              data-testid="button-confirm-accept"
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
             >
-              Complete Pickup
+              Accept & Complete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+
+      {/* Reject Dialog */}
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent data-testid="dialog-reject-booking">
+          <DialogHeader>
+            <DialogTitle>Reject Pickup</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for rejecting this pickup
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejection-reason">Rejection Reason *</Label>
+              <textarea
+                id="rejection-reason"
+                data-testid="input-rejection-reason"
+                className="w-full min-h-[100px] px-3 py-2 border rounded-md"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Enter reason for rejection..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectOpen(false)} data-testid="button-cancel-reject">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleReject}
+              data-testid="button-confirm-reject"
+              disabled={!rejectionReason.trim()}
+              variant="destructive"
+            >
+              Reject Pickup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
@@ -229,6 +291,27 @@ export default function Dashboard() {
       toast({
         title: "Status Updated",
         description: "Booking status has been updated",
+      });
+    },
+  });
+
+  const rejectBookingMutation = useMutation({
+    mutationFn: async ({ bookingId, reason }: { bookingId: string; reason: string }) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/reject`, { rejectionReason: reason });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      toast({
+        title: "Booking Rejected",
+        description: "Booking has been rejected successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject booking",
+        variant: "destructive",
       });
     },
   });
@@ -600,12 +683,16 @@ export default function Dashboard() {
                       vendorInfo={booking.vendor}
                     />
                     {currentUser?.role === "vendor" && (
-                      <CompleteBookingDialog 
+                      <AcceptRejectDialog 
                         bookingId={booking.id}
-                        onComplete={(paymentMode) => updateStatusMutation.mutate({ 
+                        onAccept={(paymentMode) => updateStatusMutation.mutate({ 
                           bookingId: booking.id, 
                           status: "completed",
                           paymentMode 
+                        })}
+                        onReject={(reason) => rejectBookingMutation.mutate({
+                          bookingId: booking.id,
+                          reason
                         })}
                       />
                     )}
