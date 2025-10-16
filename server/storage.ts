@@ -53,7 +53,7 @@ export interface IStorage {
   getBooking(id: string): Promise<(Booking & { items: BookingItem[] }) | undefined>;
   createBooking(booking: InsertBooking, items: InsertBookingItem[]): Promise<Booking>;
   assignVendor(bookingId: string, vendorId: string): Promise<Booking | undefined>;
-  updateBookingStatus(bookingId: string, status: string): Promise<Booking | undefined>;
+  updateBookingStatus(bookingId: string, status: string, paymentMode?: string): Promise<Booking | undefined>;
   deleteBooking(bookingId: string): Promise<void>;
   cancelBooking(bookingId: string): Promise<Booking | undefined>;
   updateBooking(bookingId: string, booking: Partial<InsertBooking>, items?: InsertBookingItem[]): Promise<Booking | undefined>;
@@ -305,10 +305,13 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async updateBookingStatus(bookingId: string, status: string): Promise<Booking | undefined> {
+  async updateBookingStatus(bookingId: string, status: string, paymentMode?: string): Promise<Booking | undefined> {
     const updateData: any = { status };
     if (status === "completed") {
       updateData.completedAt = new Date();
+    }
+    if (paymentMode) {
+      updateData.paymentMode = paymentMode;
     }
     
     const result = await db.update(bookings)

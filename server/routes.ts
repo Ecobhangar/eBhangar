@@ -334,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/bookings/:id/status", authenticateUser, async (req, res) => {
     try {
-      const { status } = req.body;
+      const { status, paymentMode } = req.body;
       
       // Only admin and assigned vendor can update status
       const booking = await storage.getBooking(req.params.id);
@@ -353,7 +353,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const updatedBooking = await storage.updateBookingStatus(req.params.id, status);
+      // Validate payment mode if status is completed
+      if (status === "completed" && !paymentMode) {
+        return res.status(400).json({ error: "Payment mode is required when completing a booking" });
+      }
+
+      const updatedBooking = await storage.updateBookingStatus(req.params.id, status, paymentMode);
       res.json(updatedBooking);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
