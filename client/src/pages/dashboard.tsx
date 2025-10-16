@@ -30,7 +30,8 @@ import {
   Clock, 
   IndianRupee,
   Plus,
-  User as UserIcon
+  User as UserIcon,
+  Star
 } from "lucide-react";
 
 interface BookingItem {
@@ -103,7 +104,8 @@ function CheckReviewButton({
       onClick={onRate}
       data-testid={`button-rate-pickup-${bookingId}`}
     >
-      ⭐ Rate This Pickup
+      <Star className="w-4 h-4 mr-2 fill-current" />
+      Rate This Pickup
     </Button>
   );
 }
