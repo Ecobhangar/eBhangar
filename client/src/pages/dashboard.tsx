@@ -402,6 +402,7 @@ export default function Dashboard() {
                     <div key={booking.id} className="space-y-4">
                       <BookingCard 
                         id={booking.id}
+                        referenceId={booking.referenceId}
                         customerName={booking.customerName}
                         phone={booking.customerPhone}
                         address={booking.customerAddress}
@@ -410,7 +411,8 @@ export default function Dashboard() {
                           quantity: item.quantity 
                         }))}
                         totalValue={parseFloat(booking.totalValue)}
-                        status={booking.status}
+                        paymentMode={booking.paymentMode}
+                        status={booking.status as any}
                         date={new Date(booking.createdAt)}
                         completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                         showActions={true}
@@ -420,7 +422,7 @@ export default function Dashboard() {
                         onCancel={handleCancelBooking}
                       />
                       
-                      {booking.status === "assigned" && (
+                      {(booking.status === "accepted" || booking.status === "on_the_way") && (
                         <LiveTrackingMap
                           vendorLatitude={booking.vendorLatitude ? Number(booking.vendorLatitude) : null}
                           vendorLongitude={booking.vendorLongitude ? Number(booking.vendorLongitude) : null}
@@ -505,6 +507,7 @@ export default function Dashboard() {
                       <BookingCard 
                         key={booking.id} 
                         id={booking.id}
+                        referenceId={booking.referenceId}
                         customerName={booking.customerName}
                         phone={booking.customerPhone}
                         address={booking.customerAddress}
@@ -513,7 +516,8 @@ export default function Dashboard() {
                           quantity: item.quantity 
                         }))}
                         totalValue={parseFloat(booking.totalValue)}
-                        status={booking.status}
+                        paymentMode={booking.paymentMode}
+                        status={booking.status as any}
                         date={new Date(booking.createdAt)}
                         completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                         isAdmin={true}
@@ -557,16 +561,16 @@ export default function Dashboard() {
               <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <StatCard 
-                title={currentUser?.role === "admin" ? "All Assigned Pickups" : "Assigned Pickups"}
+                title={currentUser?.role === "admin" ? "All Active Pickups" : "Active Pickups"}
                 value={bookings.filter(b => 
-                  b.status === "assigned" && 
+                  (b.status === "accepted" || b.status === "on_the_way") && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
                 ).length} 
                 icon={Package}
                 gradient="from-amber-500 to-orange-600"
               />
               <StatCard 
-                title={currentUser?.role === "admin" ? "All Completed Today" : "Completed Today"}
+                title={currentUser?.role === "admin" ? "All Completed" : "Completed Orders"}
                 value={bookings.filter(b => 
                   b.status === "completed" && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
@@ -575,7 +579,7 @@ export default function Dashboard() {
                 gradient="from-green-500 to-emerald-600"
               />
               <StatCard 
-                title={currentUser?.role === "admin" ? "Total Earnings Today" : "Today's Earnings"}
+                title={currentUser?.role === "admin" ? "Total Payments" : "Total Payments"}
                 value={`₹${bookings.filter(b => 
                   b.status === "completed" && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
@@ -591,12 +595,13 @@ export default function Dashboard() {
               </h2>
               <div className="grid gap-6">
                 {bookings.filter(b => 
-                  b.status === "assigned" && 
+                  (b.status === "accepted" || b.status === "on_the_way") && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
                 ).map((booking) => (
                   <div key={booking.id} className="space-y-2">
                     <BookingCard 
                       id={booking.id}
+                      referenceId={booking.referenceId}
                       customerName={booking.customerName}
                       phone={booking.customerPhone}
                       address={booking.customerAddress}
@@ -605,7 +610,8 @@ export default function Dashboard() {
                         quantity: item.quantity 
                       }))}
                       totalValue={parseFloat(booking.totalValue)}
-                      status={booking.status}
+                      paymentMode={booking.paymentMode}
+                      status={booking.status as any}
                       date={new Date(booking.createdAt)}
                       completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                       vendorInfo={booking.vendor}
@@ -625,7 +631,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {bookings.filter(b => 
-                  b.status === "assigned" && 
+                  (b.status === "accepted" || b.status === "on_the_way") && 
                   (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
                 ).length === 0 && (
                   <p className="text-muted-foreground">No assigned pickups</p>

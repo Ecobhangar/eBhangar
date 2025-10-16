@@ -49,6 +49,7 @@ export default function CreateBooking() {
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [currentCategoryId, setCurrentCategoryId] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("1");
+  const [paymentMode, setPaymentMode] = useState<string>("cash");
 
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: ["/api/users/me"],
@@ -146,6 +147,7 @@ export default function CreateBooking() {
       district: userProfile?.district || "",
       state: userProfile?.state || "",
       totalValue,
+      paymentMode,
       items: selectedItems,
     });
   };
@@ -312,6 +314,30 @@ export default function CreateBooking() {
               )}
             </CardContent>
           </Card>
+
+            {/* Payment Mode Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Method</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label>Select Payment Mode *</Label>
+                  <Select value={paymentMode} onValueChange={setPaymentMode}>
+                    <SelectTrigger data-testid="select-payment-mode">
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="upi">UPI</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Choose how you'll pay the vendor upon pickup
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Submit Button */}
             <div className="flex justify-end gap-4">
