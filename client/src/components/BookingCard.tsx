@@ -36,7 +36,7 @@ interface BookingCardProps {
 const statusConfig = {
   pending: { color: "bg-chart-3 text-white", label: "Pending", iconColor: "text-orange-400" },
   accepted: { color: "bg-blue-600 text-white", label: "Accepted", iconColor: "text-blue-400" },
-  rejected: { color: "bg-red-600 text-white", label: "Rejected", iconColor: "text-red-400" },
+  rejected: { color: "bg-red-600 text-white", label: "Pickup Rejected", iconColor: "text-red-400" },
   on_the_way: { color: "bg-chart-4 text-white", label: "On the Way", iconColor: "text-green-400" },
   completed: { color: "bg-primary text-primary-foreground", label: "Completed", iconColor: "text-green-400" },
   pickup_assigned: { color: "bg-blue-500 text-white", label: "Pickup Assigned", iconColor: "text-blue-400" },
