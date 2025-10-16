@@ -301,7 +301,7 @@ export default function Dashboard() {
 
   const rejectBookingMutation = useMutation({
     mutationFn: async ({ bookingId, reason }: { bookingId: string; reason: string }) => {
-      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/reject`, { rejectionReason: reason });
+      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/reject`, { reason });
       return res.json();
     },
     onSuccess: () => {
