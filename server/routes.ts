@@ -745,10 +745,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Invoice Details
       doc.fontSize(10);
       const invoiceDate = booking.completedAt || invoice.createdAt || new Date();
+      const istDate = new Date(invoiceDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+      const istTime = new Date(invoiceDate).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
       doc.text(`Invoice Number: ${invoice.invoiceNumber}`, 50, doc.y);
       doc.text(`Booking Reference: ${booking.referenceId}`, 50, doc.y);
-      doc.text(`Date: ${new Date(invoiceDate).toLocaleDateString('en-IN')}`, 50, doc.y);
-      doc.text(`Time: ${new Date(invoiceDate).toLocaleTimeString('en-IN')}`, 50, doc.y);
+      doc.text(`Date: ${istDate}`, 50, doc.y);
+      doc.text(`Time: ${istTime}`, 50, doc.y);
       doc.text(`Payment Mode: ${invoice.paymentMode.toUpperCase()}`, 50, doc.y);
       doc.moveDown();
 
