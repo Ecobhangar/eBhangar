@@ -23,7 +23,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Database Schema
 -   **Core Tables:** `users` (phone-based auth, role), `categories` (scrap types, pricing), `vendors` (linked to users, location, KYC), `bookings` (customer orders with referenceId, paymentMode, rejectionReason, denormalized customer data, status, vendor FK), `bookingItems` (items per booking), `invoices` (booking invoice records), `settings` (platform configuration).
--   **Recent Updates (Oct 2025):** Added `referenceId` (varchar, unique, format: EBH-AWB-XXXX), `paymentMode` (cash/upi), `rejectionReason` (text) to bookings table. Created `invoices` table for completed booking invoices and `settings` table for platform fee configuration.
+-   **Recent Updates (Oct 2025):** Added `referenceId` (varchar, unique, format: EBH-AWB-XXXX), `paymentMode` (cash/upi), `rejectionReason` (text) to bookings table. Created `invoices` table for completed booking invoices and `settings` table for platform fee configuration. Removed `vendorLatitude` and `vendorLongitude` columns (live tracking feature removed).
 -   **Design Decisions:** UUID primary keys, denormalization for historical accuracy, status-based workflow (pending→accepted/rejected→on_the_way→completed), decimal types for precision, timestamps for audit, auto-generated booking reference IDs.
 
 ### Authentication & Authorization
@@ -32,13 +32,10 @@ Preferred communication style: Simple, everyday language.
 -   **Security:** Phone number as primary ID, session-based auth, role-based middleware, auto-provisioning.
 
 ### Feature Specifications
--   **Customer Features:** Profile management (saved address), simplified booking flow (auto-uses profile address, payment handled by vendor at completion), category selection, estimated value display, unique booking reference ID (EBH-AWB-XXXX), view booking history with status-based actions (edit/delete pending, cancel accepted/on_the_way, view completed), privacy protection (no vendor details for customers), live pickup tracking (Google Maps shows vendor location for accepted/on_the_way bookings), rating & review system (rate completed pickups 1-5 stars with optional text review).
+-   **Customer Features:** Profile management (saved address), simplified booking flow (auto-uses profile address, payment handled by vendor at completion), category selection, estimated value display, unique booking reference ID (EBH-AWB-XXXX), view booking history with status-based actions (edit/delete pending, cancel accepted/on_the_way, view completed), privacy protection (no vendor details for customers), rating & review system (rate completed pickups 1-5 stars with optional text review).
 -   **Admin Features:** View all bookings with reference IDs and payment modes, smart vendor assignment (pin code-based, displays vendor name/phone), booking rejection with reason, track statuses (pending/accepted/rejected/on_the_way/completed), manage vendor assignments, vendor onboarding system (form with validation for KYC, address, active status, auto-user creation), invoice generation API for completed bookings, platform settings (adjustable fee %, city filter), optional email notifications.
--   **Vendor Features:** View assigned pickups with reference IDs (filtered by current vendor ID, status: accepted/on_the_way), accept/reject bookings with rejection reason, complete pickups with payment mode selection (Cash/UPI via dialog), track active pickup count (vendor-specific stats), live location sharing (geolocation API updates booking coordinates for accepted/on_the_way bookings only), vendor reviews dashboard (displays all ratings and reviews received with average rating, star distribution chart, and individual review cards).
+-   **Vendor Features:** View assigned pickups with reference IDs (filtered by current vendor ID, status: accepted/on_the_way), accept/reject bookings with rejection reason, complete pickups with payment mode selection (Cash/UPI via dialog), track active pickup count (vendor-specific stats), vendor reviews dashboard (displays all ratings and reviews received with average rating, star distribution chart, and individual review cards).
 -   **Legal & Info Section:** Five legal pages (Terms & Conditions, Privacy Policy, Disclaimer, Vendor Onboarding Policy, Contact/Grievance) accessible from footer, consistent branding, responsive design.
-
-### Performance Optimizations
--   **Google Maps Loading:** Singleton pattern ensures Google Maps API (`setOptions` and `importLibrary`) is initialized only once per session, eliminating duplicate API calls and console warnings. `mapReady` state ensures vendor markers render correctly even when coordinates are available before map initialization. Enhanced loading UI with descriptive messages improves user experience during map initialization.
 
 ## External Dependencies
 
@@ -56,4 +53,3 @@ Preferred communication style: Simple, everyday language.
 ### Environment Configuration
 -   `DATABASE_URL` (PostgreSQL connection string)
 -   `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` (Firebase config)
--   `VITE_GOOGLE_MAPS_API_KEY` (Google Maps JavaScript API for live tracking)
