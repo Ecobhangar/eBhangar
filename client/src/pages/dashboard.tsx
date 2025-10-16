@@ -6,7 +6,6 @@ import { BookingCard } from "@/components/BookingCard";
 import { VendorCard } from "@/components/VendorCard";
 import { VendorReviews } from "@/components/VendorReviews";
 import { RatingModal } from "@/components/RatingModal";
-import { LiveTrackingMap } from "@/components/LiveTrackingMap";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -31,7 +30,6 @@ import {
   Clock, 
   IndianRupee,
   Plus,
-  MapPin,
   User as UserIcon
 } from "lucide-react";
 
@@ -54,8 +52,6 @@ interface Booking {
   paymentMode: "cash" | "upi";
   status: "pending" | "accepted" | "rejected" | "on_the_way" | "completed";
   vendorId?: string | null;
-  vendorLatitude?: string | null;
-  vendorLongitude?: string | null;
   rejectionReason?: string | null;
   createdAt: string;
   completedAt?: string | null;
@@ -107,84 +103,6 @@ function CheckReviewButton({
       data-testid={`button-rate-pickup-${bookingId}`}
     >
       ⭐ Rate This Pickup
-    </Button>
-  );
-}
-
-function ShareLocationButton({ bookingId }: { bookingId: string }) {
-  const { toast } = useToast();
-  const [isSharing, setIsSharing] = useState(false);
-
-  const updateLocationMutation = useMutation({
-    mutationFn: async ({ latitude, longitude }: { latitude: number; longitude: number }) => {
-      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/location`, {
-        latitude,
-        longitude
-      });
-      return await res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Location shared",
-        description: "Customer can now see your live location",
-      });
-      setIsSharing(false);
-    },
-    onError: () => {
-      toast({
-        title: "Failed to share location",
-        description: "Please try again",
-        variant: "destructive",
-      });
-      setIsSharing(false);
-    }
-  });
-
-  const handleShareLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Location not supported",
-        description: "Your browser doesn't support location sharing",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSharing(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        updateLocationMutation.mutate({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        toast({
-          title: "Location access denied",
-          description: "Please enable location access to share your location",
-          variant: "destructive",
-        });
-        setIsSharing(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  };
-
-  return (
-    <Button
-      variant="outline"
-      className="w-full"
-      onClick={handleShareLocation}
-      disabled={isSharing || updateLocationMutation.isPending}
-      data-testid={`button-share-location-${bookingId}`}
-    >
-      <MapPin className="w-4 h-4 mr-2" />
-      {isSharing || updateLocationMutation.isPending ? "Sharing location..." : "Share Live Location"}
     </Button>
   );
 }
@@ -496,15 +414,6 @@ export default function Dashboard() {
                         onCancel={handleCancelBooking}
                       />
                       
-                      {(booking.status === "accepted" || booking.status === "on_the_way") && (
-                        <LiveTrackingMap
-                          vendorLatitude={booking.vendorLatitude ? Number(booking.vendorLatitude) : null}
-                          vendorLongitude={booking.vendorLongitude ? Number(booking.vendorLongitude) : null}
-                          customerAddress={booking.customerAddress}
-                          bookingId={booking.id}
-                        />
-                      )}
-                      
                       {booking.status === "completed" && booking.vendorId && (
                         <CheckReviewButton 
                           bookingId={booking.id} 
@@ -691,17 +600,14 @@ export default function Dashboard() {
                       vendorInfo={booking.vendor}
                     />
                     {currentUser?.role === "vendor" && (
-                      <>
-                        <ShareLocationButton bookingId={booking.id} />
-                        <CompleteBookingDialog 
-                          bookingId={booking.id}
-                          onComplete={(paymentMode) => updateStatusMutation.mutate({ 
-                            bookingId: booking.id, 
-                            status: "completed",
-                            paymentMode 
-                          })}
-                        />
-                      </>
+                      <CompleteBookingDialog 
+                        bookingId={booking.id}
+                        onComplete={(paymentMode) => updateStatusMutation.mutate({ 
+                          bookingId: booking.id, 
+                          status: "completed",
+                          paymentMode 
+                        })}
+                      />
                     )}
                   </div>
                 ))}
