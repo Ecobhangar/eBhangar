@@ -343,11 +343,11 @@ export default function Dashboard() {
                 <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">My Dashboard</h1>
                 <p className="text-muted-foreground mt-1">Track your bookings and earnings</p>
               </div>
-              {/* Desktop Button */}
+              {/* New Booking Button - Always Visible */}
               <Button 
                 onClick={() => setLocation("/bookings/new")} 
                 data-testid="button-new-booking" 
-                className="hidden sm:flex gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300"
                 size="lg"
               >
                 <Plus className="w-5 h-5" />
@@ -383,15 +383,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Mobile Floating Action Button */}
-            <Button
-              onClick={() => setLocation("/bookings/new")}
-              size="icon"
-              className="sm:hidden fixed bottom-6 right-6 rounded-full shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 z-50 hover:scale-110 transition-all duration-300"
-              data-testid="button-new-booking-mobile"
-            >
-              <Plus className="w-6 h-6" />
-            </Button>
 
             <div>
               <h2 className="text-2xl font-semibold mb-6">My Bookings</h2>
