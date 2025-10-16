@@ -53,8 +53,6 @@ export const bookings = pgTable("bookings", {
   status: text("status").notNull().default("pending"), // pending, accepted, rejected, on_the_way, completed
   rejectionReason: text("rejection_reason"),
   vendorId: varchar("vendor_id").references(() => vendors.id),
-  vendorLatitude: decimal("vendor_latitude", { precision: 10, scale: 7 }),
-  vendorLongitude: decimal("vendor_longitude", { precision: 10, scale: 7 }),
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
