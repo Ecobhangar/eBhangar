@@ -57,7 +57,6 @@ export interface IStorage {
   deleteBooking(bookingId: string): Promise<void>;
   cancelBooking(bookingId: string): Promise<Booking | undefined>;
   updateBooking(bookingId: string, booking: Partial<InsertBooking>, items?: InsertBookingItem[]): Promise<Booking | undefined>;
-  updateBookingLocation(bookingId: string, latitude: number, longitude: number): Promise<Booking | undefined>;
 
   // Review management
   createReview(review: InsertReview): Promise<Review>;
@@ -339,17 +338,6 @@ export class DbStorage implements IStorage {
       );
     }
     
-    return result[0];
-  }
-
-  async updateBookingLocation(bookingId: string, latitude: number, longitude: number): Promise<Booking | undefined> {
-    const result = await db.update(bookings)
-      .set({ 
-        vendorLatitude: latitude.toString(),
-        vendorLongitude: longitude.toString()
-      })
-      .where(eq(bookings.id, bookingId))
-      .returning();
     return result[0];
   }
 
