@@ -721,7 +721,7 @@ export default function Dashboard() {
                       completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                       vendorInfo={booking.vendor}
                     />
-                    {(currentUser?.role === "vendor" || currentUser?.role === "admin") && (
+                    {currentUser?.role === "vendor" && (
                       <AcceptRejectDialog 
                         bookingId={booking.id}
                         onAccept={(paymentMode) => updateStatusMutation.mutate({ 
