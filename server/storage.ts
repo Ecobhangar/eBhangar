@@ -290,7 +290,7 @@ export class DbStorage implements IStorage {
 
   async assignVendor(bookingId: string, vendorId: string): Promise<Booking | undefined> {
     const result = await db.update(bookings)
-      .set({ vendorId, status: "accepted" })
+      .set({ vendorId })
       .where(eq(bookings.id, bookingId))
       .returning();
     return result[0];
