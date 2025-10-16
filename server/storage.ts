@@ -420,17 +420,17 @@ export class DbStorage implements IStorage {
   async generateBookingReferenceId(): Promise<string> {
     const result = await db.select({ referenceId: bookings.referenceId })
       .from(bookings)
-      .where(like(bookings.referenceId, 'EBH-AWB-%'))
+      .where(like(bookings.referenceId, 'EBH-MUM-%'))
       .orderBy(desc(bookings.referenceId))
       .limit(1);
     
     if (result.length === 0 || !result[0].referenceId) {
-      return 'EBH-AWB-1000';
+      return 'EBH-MUM-1000';
     }
     
     const lastNumber = parseInt(result[0].referenceId.split('-')[2]);
     const nextNumber = lastNumber + 1;
-    return `EBH-AWB-${nextNumber.toString().padStart(4, '0')}`;
+    return `EBH-MUM-${nextNumber.toString().padStart(4, '0')}`;
   }
 
   // Booking rejection
