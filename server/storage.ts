@@ -6,6 +6,8 @@ import {
   bookings, 
   bookingItems,
   reviews,
+  invoices,
+  settings,
   type User,
   type InsertUser,
   type Category,
@@ -17,9 +19,13 @@ import {
   type BookingItem,
   type InsertBookingItem,
   type Review,
-  type InsertReview
+  type InsertReview,
+  type Invoice,
+  type InsertInvoice,
+  type Settings,
+  type InsertSettings
 } from "@shared/schema";
-import { eq, and, desc, avg, sql as drizzleSql } from "drizzle-orm";
+import { eq, and, desc, avg, sql as drizzleSql, like } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -58,6 +64,20 @@ export interface IStorage {
   getReviewsByVendor(vendorId: string): Promise<(Review & { customer: User })[]>;
   getReviewByBooking(bookingId: string): Promise<Review | undefined>;
   getVendorAverageRating(vendorId: string): Promise<number>;
+
+  // Invoice management
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  getInvoiceByBooking(bookingId: string): Promise<Invoice | undefined>;
+
+  // Settings management
+  getSetting(key: string): Promise<Settings | undefined>;
+  updateSetting(key: string, value: string): Promise<Settings>;
+
+  // Reference ID generation
+  generateBookingReferenceId(): Promise<string>;
+
+  // Booking rejection
+  rejectBooking(bookingId: string, reason: string): Promise<Booking | undefined>;
 }
 
 export class DbStorage implements IStorage {
@@ -256,7 +276,8 @@ export class DbStorage implements IStorage {
   }
 
   async createBooking(booking: InsertBooking, items: InsertBookingItem[]): Promise<Booking> {
-    const result = await db.insert(bookings).values(booking).returning();
+    const referenceId = await this.generateBookingReferenceId();
+    const result = await db.insert(bookings).values({ ...booking, referenceId }).returning();
     const createdBooking = result[0];
     
     if (items.length > 0) {
@@ -270,7 +291,7 @@ export class DbStorage implements IStorage {
 
   async assignVendor(bookingId: string, vendorId: string): Promise<Booking | undefined> {
     const result = await db.update(bookings)
-      .set({ vendorId, status: "assigned" })
+      .set({ vendorId, status: "accepted" })
       .where(eq(bookings.id, bookingId))
       .returning();
     return result[0];
@@ -361,6 +382,68 @@ export class DbStorage implements IStorage {
       .where(eq(reviews.vendorId, vendorId));
     
     return result[0]?.avgRating ? Number(result[0].avgRating) : 0;
+  }
+
+  // Invoice methods
+  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
+    const result = await db.insert(invoices).values(invoice).returning();
+    return result[0];
+  }
+
+  async getInvoiceByBooking(bookingId: string): Promise<Invoice | undefined> {
+    const result = await db.select()
+      .from(invoices)
+      .where(eq(invoices.bookingId, bookingId));
+    return result[0];
+  }
+
+  // Settings methods
+  async getSetting(key: string): Promise<Settings | undefined> {
+    const result = await db.select()
+      .from(settings)
+      .where(eq(settings.key, key));
+    return result[0];
+  }
+
+  async updateSetting(key: string, value: string): Promise<Settings> {
+    const result = await db.insert(settings)
+      .values({ key, value })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value, updatedAt: new Date() }
+      })
+      .returning();
+    return result[0];
+  }
+
+  // Reference ID generation
+  async generateBookingReferenceId(): Promise<string> {
+    const result = await db.select({ referenceId: bookings.referenceId })
+      .from(bookings)
+      .where(like(bookings.referenceId, 'EBH-AWB-%'))
+      .orderBy(desc(bookings.referenceId))
+      .limit(1);
+    
+    if (result.length === 0 || !result[0].referenceId) {
+      return 'EBH-AWB-1000';
+    }
+    
+    const lastNumber = parseInt(result[0].referenceId.split('-')[2]);
+    const nextNumber = lastNumber + 1;
+    return `EBH-AWB-${nextNumber.toString().padStart(4, '0')}`;
+  }
+
+  // Booking rejection
+  async rejectBooking(bookingId: string, reason: string): Promise<Booking | undefined> {
+    const result = await db.update(bookings)
+      .set({ 
+        status: "rejected",
+        rejectionReason: reason,
+        vendorId: null
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+    return result[0];
   }
 }
 

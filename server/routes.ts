@@ -118,8 +118,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/vendors", authenticateUser, requireRole("admin"), async (req, res) => {
     try {
-      const { userId, location, pinCode } = req.body;
-      const vendor = await storage.createVendor({ userId, location, pinCode });
+      const { userId, location, pinCode, district, state } = req.body;
+      const vendor = await storage.createVendor({ 
+        userId, 
+        location, 
+        pinCode, 
+        district: district || "Mumbai", 
+        state: state || "Maharashtra" 
+      });
       
       // Update user role to vendor
       await storage.updateUserRole(userId, "vendor");
@@ -535,6 +541,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       res.json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Booking rejection with reason
+  app.patch("/api/bookings/:id/reject", authenticateUser, async (req, res) => {
+    try {
+      const booking = await storage.getBooking(req.params.id);
+      
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Only vendors can reject bookings
+      const vendor = await storage.getVendorByUserId(req.user!.id);
+      if (!vendor) {
+        return res.status(403).json({ error: "Only vendors can reject bookings" });
+      }
+
+      const { reason } = req.body;
+      if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+        return res.status(400).json({ error: "Rejection reason is required" });
+      }
+
+      const updatedBooking = await storage.rejectBooking(booking.id, reason.trim());
+      res.json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Invoice routes
+  app.post("/api/invoices", authenticateUser, async (req, res) => {
+    try {
+      const { bookingId } = req.body;
+      
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      if (booking.status !== "completed") {
+        return res.status(400).json({ error: "Can only generate invoice for completed bookings" });
+      }
+
+      // Check if invoice already exists
+      const existingInvoice = await storage.getInvoiceByBooking(bookingId);
+      if (existingInvoice) {
+        return res.json(existingInvoice);
+      }
+
+      // Get vendor details
+      const vendor = booking.vendorId ? await storage.getVendor(booking.vendorId) : null;
+      if (!vendor) {
+        return res.status(400).json({ error: "Vendor information not found" });
+      }
+
+      // Get platform fee setting
+      const platformFeeSetting = await storage.getSetting('platform_fee_percent');
+      const platformFeePercent = platformFeeSetting ? parseFloat(platformFeeSetting.value) : 0;
+      const platformFee = (parseFloat(booking.totalValue) * platformFeePercent) / 100;
+      const netAmount = parseFloat(booking.totalValue) - platformFee;
+
+      // Generate invoice number
+      const invoiceNumber = `INV-${booking.referenceId?.replace('EBH-AWB-', '')}`;
+
+      const invoice = await storage.createInvoice({
+        bookingId: booking.id,
+        invoiceNumber,
+        customerName: booking.customerName,
+        customerPhone: booking.customerPhone,
+        customerAddress: booking.customerAddress,
+        vendorName: vendor.user.name || vendor.user.phoneNumber,
+        vendorPhone: vendor.user.phoneNumber,
+        totalValue: booking.totalValue,
+        platformFee: platformFee.toFixed(2),
+        netAmount: netAmount.toFixed(2),
+        paymentMode: booking.paymentMode || 'cash'
+      });
+
+      res.json(invoice);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/invoices/booking/:bookingId", authenticateUser, async (req, res) => {
+    try {
+      const invoice = await storage.getInvoiceByBooking(req.params.bookingId);
+      res.json(invoice || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Settings routes
+  app.get("/api/settings/:key", authenticateUser, requireRole("admin"), async (req, res) => {
+    try {
+      const setting = await storage.getSetting(req.params.key);
+      res.json(setting || { key: req.params.key, value: "0" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/settings/:key", authenticateUser, requireRole("admin"), async (req, res) => {
+    try {
+      const { value } = req.body;
+      if (value === undefined || value === null) {
+        return res.status(400).json({ error: "Value is required" });
+      }
+
+      const setting = await storage.updateSetting(req.params.key, value.toString());
+      res.json(setting);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
