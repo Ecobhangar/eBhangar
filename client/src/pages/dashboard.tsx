@@ -536,45 +536,64 @@ export default function Dashboard() {
 
           <TabsContent value="vendor" className="space-y-8">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Vendor Dashboard</h1>
-              <p className="text-muted-foreground mt-1">View and manage assigned pickups</p>
+              <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                Vendor Dashboard
+                {currentUser?.role === "admin" && " (Admin View)"}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {currentUser?.role === "admin" ? "View all vendor pickups and performance" : "View and manage assigned pickups"}
+              </p>
             </div>
 
-            {!currentVendor && currentUser?.role !== "vendor" ? (
+            {currentUser?.role === "customer" ? (
               <Card className="p-8">
                 <div className="text-center text-muted-foreground">
                   <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <h3 className="text-lg font-semibold mb-2">Vendor Access Only</h3>
-                  <p>This dashboard is only available for vendor accounts.</p>
+                  <p>This dashboard is only available for vendor and admin accounts.</p>
                 </div>
               </Card>
             ) : (
               <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <StatCard 
-                title="Assigned Pickups" 
-                value={bookings.filter(b => b.status === "assigned" && b.vendorId === currentVendor?.id).length} 
+                title={currentUser?.role === "admin" ? "All Assigned Pickups" : "Assigned Pickups"}
+                value={bookings.filter(b => 
+                  b.status === "assigned" && 
+                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
+                ).length} 
                 icon={Package}
                 gradient="from-amber-500 to-orange-600"
               />
               <StatCard 
-                title="Completed Today" 
-                value={bookings.filter(b => b.status === "completed" && b.vendorId === currentVendor?.id).length} 
+                title={currentUser?.role === "admin" ? "All Completed Today" : "Completed Today"}
+                value={bookings.filter(b => 
+                  b.status === "completed" && 
+                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
+                ).length} 
                 icon={CheckCircle}
                 gradient="from-green-500 to-emerald-600"
               />
               <StatCard 
-                title="Today's Earnings" 
-                value={`₹${bookings.filter(b => b.status === "completed" && b.vendorId === currentVendor?.id).reduce((sum, b) => sum + parseFloat(b.totalValue), 0).toFixed(0)}`} 
+                title={currentUser?.role === "admin" ? "Total Earnings Today" : "Today's Earnings"}
+                value={`₹${bookings.filter(b => 
+                  b.status === "completed" && 
+                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
+                ).reduce((sum, b) => sum + parseFloat(b.totalValue), 0).toFixed(0)}`} 
                 icon={IndianRupee}
                 gradient="from-violet-500 to-purple-600"
               />
             </div>
 
             <div>
-              <h2 className="text-2xl font-semibold mb-6">Assigned Pickups</h2>
+              <h2 className="text-2xl font-semibold mb-6">
+                {currentUser?.role === "admin" ? "All Assigned Pickups" : "Assigned Pickups"}
+              </h2>
               <div className="grid gap-6">
-                {bookings.filter(b => b.status === "assigned" && b.vendorId === currentVendor?.id).map((booking) => (
+                {bookings.filter(b => 
+                  b.status === "assigned" && 
+                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
+                ).map((booking) => (
                   <div key={booking.id} className="space-y-2">
                     <BookingCard 
                       id={booking.id}
@@ -591,24 +610,31 @@ export default function Dashboard() {
                       completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                       vendorInfo={booking.vendor}
                     />
-                    <ShareLocationButton bookingId={booking.id} />
-                    <Button 
-                      data-testid={`button-complete-booking-${booking.id}`}
-                      className="w-full"
-                      onClick={() => updateStatusMutation.mutate({ bookingId: booking.id, status: "completed" })}
-                    >
-                      Mark as Completed
-                    </Button>
+                    {currentUser?.role === "vendor" && (
+                      <>
+                        <ShareLocationButton bookingId={booking.id} />
+                        <Button 
+                          data-testid={`button-complete-booking-${booking.id}`}
+                          className="w-full"
+                          onClick={() => updateStatusMutation.mutate({ bookingId: booking.id, status: "completed" })}
+                        >
+                          Mark as Completed
+                        </Button>
+                      </>
+                    )}
                   </div>
                 ))}
-                {bookings.filter(b => b.status === "assigned" && b.vendorId === currentVendor?.id).length === 0 && (
+                {bookings.filter(b => 
+                  b.status === "assigned" && 
+                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
+                ).length === 0 && (
                   <p className="text-muted-foreground">No assigned pickups</p>
                 )}
               </div>
             </div>
 
-              {/* Vendor Reviews Section */}
-              {currentVendor && (
+              {/* Vendor Reviews Section - Only for actual vendors */}
+              {currentUser?.role === "vendor" && currentVendor && (
                 <div className="mt-8">
                   <VendorReviews vendorId={currentVendor.id} />
                 </div>
