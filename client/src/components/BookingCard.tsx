@@ -130,7 +130,7 @@ export function BookingCard({ id, referenceId, customerName, phone, address, ite
           <MapPin className="w-4 h-4 text-muted-foreground" />
           <span data-testid={`text-address-${id}`}>{address}</span>
         </div>
-        {isAdmin && vendorInfo && (status === "assigned" || status === "completed") && (
+        {isAdmin && vendorInfo && (status === "pending" || status === "completed") && (
           <div className="mt-3 pt-3 border-t">
             <p className="text-xs font-medium text-muted-foreground mb-1">
               {status === "completed" ? "Completed by:" : "Assigned to:"}
