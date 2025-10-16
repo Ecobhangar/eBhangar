@@ -556,10 +556,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Booking not found" });
       }
 
-      // Only vendors can reject bookings
+      // Only vendors and admins can reject bookings
       const vendor = await storage.getVendorByUserId(req.user!.id);
-      if (!vendor) {
-        return res.status(403).json({ error: "Only vendors can reject bookings" });
+      if (!vendor && req.user!.role !== "admin") {
+        return res.status(403).json({ error: "Only vendors and admins can reject bookings" });
       }
 
       const { reason } = req.body;
