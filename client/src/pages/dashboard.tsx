@@ -386,18 +386,10 @@ export default function Dashboard() {
 
   const handleDownloadInvoice = async (bookingId: string) => {
     try {
-      const token = await user?.getIdToken();
-      const response = await fetch(`/api/invoices/${bookingId}/download`, {
-        headers: {
-          'x-user-phone': user?.phoneNumber || '',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Use apiRequest to ensure proper auth headers
+      const response = await apiRequest('GET', `/api/invoices/${bookingId}/download`);
       
-      if (!response.ok) {
-        throw new Error('Failed to download invoice');
-      }
-      
+      // Create blob and trigger download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -405,8 +397,12 @@ export default function Dashboard() {
       a.download = `eBhangar-Invoice-${bookingId}.pdf`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
       
       toast({
         title: "Invoice Downloaded",
