@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { authenticateUser, requireRole } from "./middleware/auth";
 import { insertUserSchema, insertCategorySchema, insertVendorSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
 import { sendBookingNotification } from "./email";
+import PDFDocument from "pdfkit";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -633,6 +634,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const invoice = await storage.getInvoiceByBooking(req.params.bookingId);
       res.json(invoice || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PDF Download endpoint
+  app.get("/api/invoices/:bookingId/download", authenticateUser, async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      
+      // Get or create invoice
+      let invoice = await storage.getInvoiceByBooking(bookingId);
+      
+      if (!invoice) {
+        // Auto-generate invoice if not exists
+        const booking = await storage.getBooking(bookingId);
+        if (!booking) {
+          return res.status(404).json({ error: "Booking not found" });
+        }
+
+        if (booking.status !== "completed") {
+          return res.status(400).json({ error: "Can only generate invoice for completed bookings" });
+        }
+
+        const vendor = booking.vendorId ? await storage.getVendor(booking.vendorId) : null;
+        if (!vendor) {
+          return res.status(400).json({ error: "Vendor information not found" });
+        }
+
+        const platformFeeSetting = await storage.getSetting('platform_fee_percent');
+        const platformFeePercent = platformFeeSetting ? parseFloat(platformFeeSetting.value) : 0;
+        const platformFee = (parseFloat(booking.totalValue) * platformFeePercent) / 100;
+        const netAmount = parseFloat(booking.totalValue) - platformFee;
+
+        const invoiceNumber = `INV-${booking.referenceId?.replace('EBH-MUM-', '')}`;
+
+        invoice = await storage.createInvoice({
+          bookingId: booking.id,
+          invoiceNumber,
+          customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
+          customerAddress: booking.customerAddress,
+          vendorName: vendor.user.name || vendor.user.phoneNumber,
+          vendorPhone: vendor.user.phoneNumber,
+          totalValue: booking.totalValue,
+          platformFee: platformFee.toFixed(2),
+          netAmount: netAmount.toFixed(2),
+          paymentMode: booking.paymentMode || 'cash'
+        });
+      }
+
+      // Get booking with items
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Create PDF
+      const doc = new PDFDocument({ margin: 50 });
+      
+      // Set response headers for download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=eBhangar-Invoice-${booking.referenceId}.pdf`);
+      
+      // Pipe PDF to response
+      doc.pipe(res);
+
+      // Header
+      doc.fontSize(24).fillColor('#16a34a').text('eBhangar', { align: 'center' });
+      doc.fontSize(10).fillColor('#666').text('Eco Recycling Partner', { align: 'center' });
+      doc.moveDown();
+      
+      // Invoice Title
+      doc.fontSize(18).fillColor('#000').text('INVOICE', { align: 'center' });
+      doc.moveDown();
+
+      // Invoice Details
+      doc.fontSize(10);
+      doc.text(`Invoice Number: ${invoice.invoiceNumber}`, 50, doc.y);
+      doc.text(`Booking Reference: ${booking.referenceId}`, 50, doc.y);
+      doc.text(`Date: ${new Date(invoice.createdAt!).toLocaleDateString('en-IN')}`, 50, doc.y);
+      doc.text(`Time: ${new Date(invoice.createdAt!).toLocaleTimeString('en-IN')}`, 50, doc.y);
+      doc.text(`Payment Mode: ${invoice.paymentMode.toUpperCase()}`, 50, doc.y);
+      doc.moveDown();
+
+      // Customer Details
+      doc.fontSize(12).fillColor('#16a34a').text('CUSTOMER DETAILS', 50, doc.y);
+      doc.fontSize(10).fillColor('#000');
+      doc.text(`Name: ${invoice.customerName}`, 50, doc.y);
+      doc.text(`Contact: ${invoice.customerPhone}`, 50, doc.y);
+      doc.text(`Address: ${invoice.customerAddress}`, 50, doc.y, { width: 500 });
+      doc.moveDown();
+
+      // Vendor Details
+      doc.fontSize(12).fillColor('#16a34a').text('VENDOR DETAILS', 50, doc.y);
+      doc.fontSize(10).fillColor('#000');
+      doc.text(`Name: ${invoice.vendorName}`, 50, doc.y);
+      doc.text(`Contact: ${invoice.vendorPhone}`, 50, doc.y);
+      doc.moveDown();
+
+      // Scrap Items Table
+      doc.fontSize(12).fillColor('#16a34a').text('SCRAP DETAILS', 50, doc.y);
+      doc.moveDown(0.5);
+
+      // Table header
+      const tableTop = doc.y;
+      doc.fontSize(9).fillColor('#000');
+      doc.text('Item', 50, tableTop, { width: 200 });
+      doc.text('Qty', 250, tableTop, { width: 60, align: 'right' });
+      doc.text('Rate', 320, tableTop, { width: 80, align: 'right' });
+      doc.text('Value', 410, tableTop, { width: 100, align: 'right' });
+      
+      doc.moveTo(50, doc.y + 5).lineTo(520, doc.y + 5).stroke();
+      doc.moveDown(0.5);
+
+      // Table rows
+      booking.items.forEach((item) => {
+        const y = doc.y;
+        doc.text(item.categoryName, 50, y, { width: 200 });
+        doc.text(item.quantity.toString(), 250, y, { width: 60, align: 'right' });
+        doc.text(`₹${parseFloat(item.rate).toFixed(2)}`, 320, y, { width: 80, align: 'right' });
+        doc.text(`₹${parseFloat(item.value).toFixed(2)}`, 410, y, { width: 100, align: 'right' });
+        doc.moveDown(0.8);
+      });
+
+      doc.moveTo(50, doc.y + 5).lineTo(520, doc.y + 5).stroke();
+      doc.moveDown();
+
+      // Totals
+      doc.fontSize(10);
+      doc.text(`Total Value:`, 350, doc.y, { width: 100, align: 'right' });
+      doc.text(`₹${parseFloat(invoice.totalValue).toFixed(2)}`, 450, doc.y, { width: 70, align: 'right' });
+      doc.moveDown(0.5);
+      
+      doc.text(`Platform Fee:`, 350, doc.y, { width: 100, align: 'right' });
+      doc.text(`₹${parseFloat(invoice.platformFee).toFixed(2)}`, 450, doc.y, { width: 70, align: 'right' });
+      doc.moveDown(0.5);
+
+      doc.fontSize(12).fillColor('#16a34a');
+      doc.text(`Net Amount:`, 350, doc.y, { width: 100, align: 'right' });
+      doc.text(`₹${parseFloat(invoice.netAmount).toFixed(2)}`, 450, doc.y, { width: 70, align: 'right' });
+      
+      // Footer
+      doc.moveDown(3);
+      doc.fontSize(10).fillColor('#666').text(
+        'Thank you for recycling with eBhangar ♻️ – Eco Recycling Partner',
+        50,
+        doc.page.height - 100,
+        { align: 'center', width: 500 }
+      );
+
+      doc.end();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
