@@ -39,18 +39,21 @@ const statusConfig = {
   rejected: { color: "bg-red-600 text-white", label: "Rejected" },
   on_the_way: { color: "bg-chart-4 text-white", label: "On the Way" },
   completed: { color: "bg-primary text-primary-foreground", label: "Completed" },
+  pickup_scheduled: { color: "bg-blue-500 text-white", label: "Pickup Scheduled" },
 };
 
 export function BookingCard({ id, referenceId, customerName, phone, address, items, totalValue, paymentMode, status, date, completedAt, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false, vendorInfo }: BookingCardProps) {
-  const config = statusConfig[status];
+  const displayStatus = (status === "pending" && vendorInfo) ? "pickup_scheduled" : status;
+  const config = statusConfig[displayStatus];
   
   const getBorderColor = () => {
-    switch (status) {
+    switch (displayStatus) {
       case 'pending': return 'border-l-chart-3';
       case 'accepted': return 'border-l-blue-600';
       case 'rejected': return 'border-l-red-600';
       case 'on_the_way': return 'border-l-chart-4';
       case 'completed': return 'border-l-primary';
+      case 'pickup_scheduled': return 'border-l-blue-500';
       default: return 'border-l-gray-400';
     }
   };
@@ -82,7 +85,7 @@ export function BookingCard({ id, referenceId, customerName, phone, address, ite
           <Badge className={config.color} data-testid={`badge-status-${id}`}>{config.label}</Badge>
           {showActions && (
             <>
-              {status === "pending" && (
+              {status === "pending" && !vendorInfo && (
                 <>
                   {onEdit && (
                     <Button
@@ -106,7 +109,7 @@ export function BookingCard({ id, referenceId, customerName, phone, address, ite
                   )}
                 </>
               )}
-              {(status === "accepted" || status === "on_the_way") && onCancel && (
+              {(status === "accepted" || status === "on_the_way" || (status === "pending" && vendorInfo)) && onCancel && (
                 <Button
                   size="icon"
                   variant="ghost"
