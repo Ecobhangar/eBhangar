@@ -8,6 +8,7 @@ import { VendorReviews } from "@/components/VendorReviews";
 import { RatingModal } from "@/components/RatingModal";
 import { LiveTrackingMap } from "@/components/LiveTrackingMap";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
@@ -539,22 +540,32 @@ export default function Dashboard() {
               <p className="text-muted-foreground mt-1">View and manage assigned pickups</p>
             </div>
 
+            {!currentVendor && currentUser?.role !== "vendor" ? (
+              <Card className="p-8">
+                <div className="text-center text-muted-foreground">
+                  <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-semibold mb-2">Vendor Access Only</h3>
+                  <p>This dashboard is only available for vendor accounts.</p>
+                </div>
+              </Card>
+            ) : (
+              <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <StatCard 
                 title="Assigned Pickups" 
-                value={bookings.filter(b => b.status === "assigned").length} 
+                value={bookings.filter(b => b.status === "assigned" && b.vendorId === currentVendor?.id).length} 
                 icon={Package}
                 gradient="from-amber-500 to-orange-600"
               />
               <StatCard 
                 title="Completed Today" 
-                value={bookings.filter(b => b.status === "completed").length} 
+                value={bookings.filter(b => b.status === "completed" && b.vendorId === currentVendor?.id).length} 
                 icon={CheckCircle}
                 gradient="from-green-500 to-emerald-600"
               />
               <StatCard 
                 title="Today's Earnings" 
-                value={`₹${totalValue.toFixed(0)}`} 
+                value={`₹${bookings.filter(b => b.status === "completed" && b.vendorId === currentVendor?.id).reduce((sum, b) => sum + parseFloat(b.totalValue), 0).toFixed(0)}`} 
                 icon={IndianRupee}
                 gradient="from-violet-500 to-purple-600"
               />
@@ -563,7 +574,7 @@ export default function Dashboard() {
             <div>
               <h2 className="text-2xl font-semibold mb-6">Assigned Pickups</h2>
               <div className="grid gap-6">
-                {bookings.filter(b => b.status === "assigned").map((booking) => (
+                {bookings.filter(b => b.status === "assigned" && b.vendorId === currentVendor?.id).map((booking) => (
                   <div key={booking.id} className="space-y-2">
                     <BookingCard 
                       id={booking.id}
@@ -590,17 +601,19 @@ export default function Dashboard() {
                     </Button>
                   </div>
                 ))}
-                {bookings.filter(b => b.status === "assigned").length === 0 && (
+                {bookings.filter(b => b.status === "assigned" && b.vendorId === currentVendor?.id).length === 0 && (
                   <p className="text-muted-foreground">No assigned pickups</p>
                 )}
               </div>
             </div>
 
-            {/* Vendor Reviews Section */}
-            {currentVendor && (
-              <div className="mt-8">
-                <VendorReviews vendorId={currentVendor.id} />
-              </div>
+              {/* Vendor Reviews Section */}
+              {currentVendor && (
+                <div className="mt-8">
+                  <VendorReviews vendorId={currentVendor.id} />
+                </div>
+              )}
+              </>
             )}
           </TabsContent>
         </Tabs>
