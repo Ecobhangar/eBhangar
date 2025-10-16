@@ -663,11 +663,12 @@ export default function Dashboard() {
               <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <StatCard 
-                title="Assigned Pickups"
-                value={bookings.filter(b => 
-                  (b.status === "pending" || b.status === "accepted") && b.vendorId && 
-                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
-                ).length} 
+                title={currentUser?.role === "admin" ? "Total Bookings" : "Assigned Pickups"}
+                value={currentUser?.role === "admin" 
+                  ? bookings.length 
+                  : bookings.filter(b => 
+                      (b.status === "pending" || b.status === "accepted") && b.vendorId && b.vendorId === currentVendor?.id
+                    ).length} 
                 icon={Package}
                 gradient="from-amber-500 to-orange-600"
               />
@@ -696,13 +697,17 @@ export default function Dashboard() {
 
             <div>
               <h2 className="text-2xl font-semibold mb-6">
-                {currentUser?.role === "admin" ? "All Assigned Pickups" : "Assigned Pickups"}
+                {currentUser?.role === "admin" ? "All Bookings" : "Assigned Pickups"}
               </h2>
               <div className="grid gap-6">
-                {bookings.filter(b => 
-                  (b.status === "pending" || b.status === "accepted") && b.vendorId && 
-                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
-                ).map((booking) => (
+                {bookings.filter(b => {
+                  if (currentUser?.role === "admin") {
+                    // Admin sees all bookings
+                    return true;
+                  }
+                  // Vendor sees only assigned pickups (pending/accepted)
+                  return (b.status === "pending" || b.status === "accepted") && b.vendorId && b.vendorId === currentVendor?.id;
+                }).map((booking) => (
                   <div key={booking.id} className="space-y-2">
                     <BookingCard 
                       id={booking.id}
@@ -737,11 +742,15 @@ export default function Dashboard() {
                     )}
                   </div>
                 ))}
-                {bookings.filter(b => 
-                  (b.status === "pending" || b.status === "accepted") && b.vendorId && 
-                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
-                ).length === 0 && (
-                  <p className="text-muted-foreground">No assigned pickups</p>
+                {bookings.filter(b => {
+                  if (currentUser?.role === "admin") {
+                    return true;
+                  }
+                  return (b.status === "pending" || b.status === "accepted") && b.vendorId && b.vendorId === currentVendor?.id;
+                }).length === 0 && (
+                  <p className="text-muted-foreground">
+                    {currentUser?.role === "admin" ? "No bookings found" : "No assigned pickups"}
+                  </p>
                 )}
               </div>
             </div>
