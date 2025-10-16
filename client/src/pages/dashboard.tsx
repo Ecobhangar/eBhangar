@@ -12,6 +12,16 @@ import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -179,6 +189,76 @@ function ShareLocationButton({ bookingId }: { bookingId: string }) {
   );
 }
 
+function CompleteBookingDialog({ 
+  bookingId, 
+  onComplete 
+}: { 
+  bookingId: string; 
+  onComplete: (paymentMode: "cash" | "upi") => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<"cash" | "upi">("cash");
+
+  const handleComplete = () => {
+    onComplete(paymentMode);
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <Button 
+        data-testid={`button-complete-booking-${bookingId}`}
+        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+        onClick={() => setOpen(true)}
+      >
+        Mark as Completed
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent data-testid="dialog-complete-booking">
+          <DialogHeader>
+            <DialogTitle>Complete Pickup</DialogTitle>
+            <DialogDescription>
+              Please select the payment method used by the customer
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="payment-mode">Payment Method *</Label>
+              <Select value={paymentMode} onValueChange={(value: "cash" | "upi") => setPaymentMode(value)}>
+                <SelectTrigger id="payment-mode" data-testid="select-payment-mode-vendor">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="upi">UPI</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Select how the customer paid for this pickup
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} data-testid="button-cancel-complete">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleComplete}
+              data-testid="button-confirm-complete"
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            >
+              Complete Pickup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("customer");
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
@@ -222,8 +302,8 @@ export default function Dashboard() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
-      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status });
+    mutationFn: async ({ bookingId, status, paymentMode }: { bookingId: string; status: string; paymentMode?: "cash" | "upi" }) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status, paymentMode });
       return res.json();
     },
     onSuccess: () => {
@@ -613,13 +693,14 @@ export default function Dashboard() {
                     {currentUser?.role === "vendor" && (
                       <>
                         <ShareLocationButton bookingId={booking.id} />
-                        <Button 
-                          data-testid={`button-complete-booking-${booking.id}`}
-                          className="w-full"
-                          onClick={() => updateStatusMutation.mutate({ bookingId: booking.id, status: "completed" })}
-                        >
-                          Mark as Completed
-                        </Button>
+                        <CompleteBookingDialog 
+                          bookingId={booking.id}
+                          onComplete={(paymentMode) => updateStatusMutation.mutate({ 
+                            bookingId: booking.id, 
+                            status: "completed",
+                            paymentMode 
+                          })}
+                        />
                       </>
                     )}
                   </div>
