@@ -32,9 +32,9 @@ Preferred communication style: Simple, everyday language.
 -   **Security:** Phone number as primary ID, session-based auth, role-based middleware, auto-provisioning.
 
 ### Feature Specifications
--   **Customer Features:** Profile management (saved address), simplified booking flow (auto-uses profile address, payment handled by vendor at completion), category selection, estimated value display, unique booking reference ID (EBH-MUM-XXXX), view booking history with status-based actions (edit/delete pending, cancel accepted/on_the_way, view completed), privacy protection (no vendor details for customers), rating & review system (rate completed pickups 1-5 stars with optional text review).
--   **Admin Features:** View all bookings with reference IDs and payment modes, smart vendor assignment (pin code-based, displays vendor name/phone, keeps status as pending), booking rejection with reason, track statuses (pending/accepted/rejected/on_the_way/completed), manage vendor assignments, vendor onboarding system (form with validation for KYC, address, active status, auto-user creation), invoice generation API for completed bookings, platform settings (adjustable fee %, city filter), optional email notifications.
--   **Vendor Features:** View assigned pickups with "pending" status (filtered by current vendor ID), accept/reject bookings (accept requires payment mode selection Cash/UPI, reject requires reason), accepting with payment mode directly completes pickup (skips on_the_way step), track active pickup count (vendor-specific stats), vendor reviews dashboard (displays all ratings and reviews received with average rating, star distribution chart, and individual review cards).
+-   **Customer Features:** Profile management (saved address), simplified booking flow (auto-uses profile address, payment handled by vendor at completion), category selection, estimated value display, unique booking reference ID (EBH-MUM-XXXX), view booking history with status-based actions (edit/delete pending, cancel accepted/on_the_way, view completed), privacy protection (no vendor details for customers), rating & review system (rate completed pickups 1-5 stars with optional text review), **PDF invoice download** for completed bookings with FileDown icon button.
+-   **Admin Features:** View all bookings with reference IDs and payment modes, smart vendor assignment (pin code-based, displays vendor name/phone, keeps status as pending), booking rejection with reason, track statuses (pending/accepted/rejected/on_the_way/completed), manage vendor assignments, vendor onboarding system (form with validation for KYC, address, active status, auto-user creation), invoice generation API for completed bookings, platform settings (adjustable fee %, city filter), optional email notifications, **PDF invoice download** access for all completed bookings.
+-   **Vendor Features:** View assigned pickups with "pending" status (filtered by current vendor ID), accept/reject bookings (accept requires payment mode selection Cash/UPI, reject requires reason), accepting with payment mode directly completes pickup (skips on_the_way step), track active pickup count (vendor-specific stats), vendor reviews dashboard (displays all ratings and reviews received with average rating, star distribution chart, and individual review cards), **PDF invoice download** for completed pickups with detailed breakdown.
 -   **Legal & Info Section:** Five legal pages (Terms & Conditions, Privacy Policy, Disclaimer, Vendor Onboarding Policy, Contact/Grievance) accessible from footer, consistent branding, responsive design.
 
 ## External Dependencies
@@ -49,6 +49,7 @@ Preferred communication style: Simple, everyday language.
 -   **Data & State:** `@tanstack/react-query`, `drizzle-orm`, `drizzle-zod`.
 -   **Build & Development:** `vite`, `esbuild`, `typescript`.
 -   **Session & Storage:** `express-session`, `connect-pg-simple`, `ws`.
+-   **PDF Generation:** `pdfkit`, `@types/pdfkit`.
 
 ### Environment Configuration
 -   `DATABASE_URL` (PostgreSQL connection string)
