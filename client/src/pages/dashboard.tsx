@@ -32,6 +32,7 @@ interface BookingItem {
 
 interface Booking {
   id: string;
+  referenceId: string;
   customerId: string;
   customerName: string;
   customerPhone: string;
@@ -40,10 +41,12 @@ interface Booking {
   district?: string | null;
   state?: string | null;
   totalValue: string;
-  status: "pending" | "assigned" | "completed";
+  paymentMode: "cash" | "upi";
+  status: "pending" | "accepted" | "rejected" | "on_the_way" | "completed";
   vendorId?: string | null;
   vendorLatitude?: string | null;
   vendorLongitude?: string | null;
+  rejectionReason?: string | null;
   createdAt: string;
   completedAt?: string | null;
   items: BookingItem[];
@@ -412,7 +415,7 @@ export default function Dashboard() {
                         }))}
                         totalValue={parseFloat(booking.totalValue)}
                         paymentMode={booking.paymentMode}
-                        status={booking.status as any}
+                        status={booking.status}
                         date={new Date(booking.createdAt)}
                         completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                         showActions={true}
@@ -517,7 +520,7 @@ export default function Dashboard() {
                         }))}
                         totalValue={parseFloat(booking.totalValue)}
                         paymentMode={booking.paymentMode}
-                        status={booking.status as any}
+                        status={booking.status}
                         date={new Date(booking.createdAt)}
                         completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                         isAdmin={true}
