@@ -360,6 +360,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedBooking = await storage.updateBookingStatus(req.params.id, status, paymentMode);
+      
+      // Auto-generate invoice when booking is completed
+      if (status === "completed") {
+        const existingInvoice = await storage.getInvoiceByBooking(req.params.id);
+        
+        if (!existingInvoice) {
+          const vendor = booking.vendorId ? await storage.getVendor(booking.vendorId) : null;
+          if (vendor) {
+            const platformFeeSetting = await storage.getSetting('platform_fee_percent');
+            const platformFeePercent = platformFeeSetting ? parseFloat(platformFeeSetting.value) : 0;
+            const platformFee = (parseFloat(booking.totalValue) * platformFeePercent) / 100;
+            const netAmount = parseFloat(booking.totalValue) - platformFee;
+
+            const invoiceNumber = `INV-${booking.referenceId?.replace('EBH-MUM-', '')}`;
+
+            await storage.createInvoice({
+              bookingId: booking.id,
+              invoiceNumber,
+              customerName: booking.customerName,
+              customerPhone: booking.customerPhone,
+              customerAddress: booking.customerAddress,
+              vendorName: vendor.user.name || vendor.user.phoneNumber,
+              vendorPhone: vendor.user.phoneNumber,
+              totalValue: booking.totalValue,
+              platformFee: platformFee.toFixed(2),
+              netAmount: netAmount.toFixed(2),
+              paymentMode: paymentMode || 'cash'
+            });
+          }
+        }
+      }
+      
       res.json(updatedBooking);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
