@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Phone, Trash2, Edit, XCircle, Circle } from "lucide-react";
+import { Calendar, MapPin, Phone, Trash2, Edit, XCircle, Circle, FileDown } from "lucide-react";
 import { format } from "date-fns";
 import {
   Select,
@@ -26,6 +26,7 @@ interface BookingCardProps {
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
   onCancel?: (id: string) => void;
+  onDownloadInvoice?: (id: string) => void;
   showActions?: boolean;
   vendors?: Array<{ id: string; name: string; phone: string }>;
   onAssignVendor?: (bookingId: string, vendorId: string) => void;
@@ -42,7 +43,7 @@ const statusConfig = {
   pickup_assigned: { color: "bg-blue-500 text-white", label: "Pickup Assigned", iconColor: "text-blue-400" },
 };
 
-export function BookingCard({ id, referenceId, customerName, phone, address, items, totalValue, paymentMode, status, date, completedAt, onDelete, onEdit, onCancel, showActions = false, vendors = [], onAssignVendor, isAdmin = false, vendorInfo }: BookingCardProps) {
+export function BookingCard({ id, referenceId, customerName, phone, address, items, totalValue, paymentMode, status, date, completedAt, onDelete, onEdit, onCancel, onDownloadInvoice, showActions = false, vendors = [], onAssignVendor, isAdmin = false, vendorInfo }: BookingCardProps) {
   const displayStatus = (status === "pending" && vendorInfo) ? "pickup_assigned" : status;
   const config = statusConfig[displayStatus] || statusConfig.pending;
   
@@ -169,7 +170,21 @@ export function BookingCard({ id, referenceId, customerName, phone, address, ite
             </Badge>
           ))}
         </div>
-        <p className="text-xl font-bold text-primary" data-testid={`text-value-${id}`}>₹{totalValue.toLocaleString()}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xl font-bold text-primary" data-testid={`text-value-${id}`}>₹{totalValue.toLocaleString()}</p>
+          {status === "completed" && onDownloadInvoice && (
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => onDownloadInvoice(id)}
+              className="bg-primary hover:bg-primary/90"
+              data-testid={`button-download-invoice-${id}`}
+            >
+              <FileDown className="w-4 h-4 mr-2" />
+              Download Invoice
+            </Button>
+          )}
+        </div>
         
         {isAdmin && status === "pending" && vendors.length > 0 && onAssignVendor && (
           <div className="mt-4 pt-4 border-t">

@@ -384,6 +384,43 @@ export default function Dashboard() {
     setLocation(`/bookings/edit/${bookingId}`);
   };
 
+  const handleDownloadInvoice = async (bookingId: string) => {
+    try {
+      const token = await user?.getIdToken();
+      const response = await fetch(`/api/invoices/${bookingId}/download`, {
+        headers: {
+          'x-user-phone': user?.phoneNumber || '',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download invoice');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `eBhangar-Invoice-${bookingId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Invoice Downloaded",
+        description: "Your invoice has been downloaded successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to download invoice",
+        variant: "destructive",
+      });
+    }
+  };
+
   const customerBookings = bookings.filter(b => b.status !== "completed");
   const completedBookings = bookings.filter(b => b.status === "completed");
   const pendingBookings = bookings.filter(b => b.status === "pending");
@@ -495,6 +532,7 @@ export default function Dashboard() {
                         date={new Date(booking.createdAt)}
                         completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
                         showActions={true}
+                        onDownloadInvoice={handleDownloadInvoice}
                         vendorInfo={booking.vendor}
                         onDelete={handleDeleteBooking}
                         onEdit={handleEditBooking}
@@ -622,6 +660,7 @@ export default function Dashboard() {
                         status={booking.status}
                         date={new Date(booking.createdAt)}
                         completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
+                        onDownloadInvoice={handleDownloadInvoice}
                         isAdmin={true}
                         vendors={filteredVendors.map(v => ({ 
                           id: v.id, 
@@ -724,6 +763,7 @@ export default function Dashboard() {
                       status={booking.status as any}
                       date={new Date(booking.createdAt)}
                       completedAt={booking.completedAt ? new Date(booking.completedAt) : null}
+                      onDownloadInvoice={handleDownloadInvoice}
                       vendorInfo={booking.vendor}
                     />
                     {(currentUser?.role === "vendor" || currentUser?.role === "admin") && booking.status === "pending" && (
