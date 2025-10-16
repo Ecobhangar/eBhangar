@@ -40,6 +40,7 @@ export const vendors = pgTable("vendors", {
 
 export const bookings = pgTable("bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referenceId: text("reference_id").unique(),
   customerId: varchar("customer_id").references(() => users.id).notNull(),
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),
@@ -48,7 +49,9 @@ export const bookings = pgTable("bookings", {
   district: text("district"),
   state: text("state"),
   totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(),
-  status: text("status").notNull().default("pending"), // pending, assigned, completed
+  paymentMode: text("payment_mode"), // cash, upi
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected, on_the_way, completed
+  rejectionReason: text("rejection_reason"),
   vendorId: varchar("vendor_id").references(() => vendors.id),
   vendorLatitude: decimal("vendor_latitude", { precision: 10, scale: 7 }),
   vendorLongitude: decimal("vendor_longitude", { precision: 10, scale: 7 }),
@@ -76,6 +79,29 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const invoices = pgTable("invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull().unique(),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone").notNull(),
+  customerAddress: text("customer_address").notNull(),
+  vendorName: text("vendor_name").notNull(),
+  vendorPhone: text("vendor_phone").notNull(),
+  totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(),
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull().default("0"),
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMode: text("payment_mode").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const settings = pgTable("settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -97,6 +123,7 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   createdAt: true,
   completedAt: true,
   status: true,
+  referenceId: true,
 });
 
 export const insertBookingItemSchema = createInsertSchema(bookingItems).omit({
@@ -112,6 +139,16 @@ export const insertReviewSchema = createInsertSchema(reviews)
     rating: z.number().int().min(1).max(5),
     comment: z.string().min(1).max(500).optional(),
   });
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSettingsSchema = createInsertSchema(settings).omit({
+  id: true,
+  updatedAt: true,
+});
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -131,3 +168,9 @@ export type InsertBookingItem = z.infer<typeof insertBookingItemSchema>;
 
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+
+export type Settings = typeof settings.$inferSelect;
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;
