@@ -518,38 +518,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vendor location tracking
-  app.patch("/api/bookings/:id/location", authenticateUser, async (req, res) => {
-    try {
-      const booking = await storage.getBooking(req.params.id);
-      
-      if (!booking) {
-        return res.status(404).json({ error: "Booking not found" });
-      }
-
-      // Only the assigned vendor can update location
-      const vendor = await storage.getVendorByUserId(req.user!.id);
-      if (!vendor || booking.vendorId !== vendor.id) {
-        return res.status(403).json({ error: "Only the assigned vendor can update location" });
-      }
-
-      const { latitude, longitude } = req.body;
-      
-      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-        return res.status(400).json({ error: "Invalid coordinates" });
-      }
-
-      const updatedBooking = await storage.updateBookingLocation(
-        req.params.id,
-        latitude,
-        longitude
-      );
-
-      res.json(updatedBooking);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
 
   // Booking rejection with reason
   app.patch("/api/bookings/:id/reject", authenticateUser, async (req, res) => {
