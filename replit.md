@@ -18,8 +18,9 @@ Preferred communication style: Simple, everyday language.
 ### Backend Architecture
 -   **Technology Stack:** Node.js with Express.js, TypeScript (ES Modules), Drizzle ORM, PostgreSQL (Neon serverless), connect-pg-simple for sessions.
 -   **API Structure:** RESTful APIs for users, categories, vendors, and bookings.
--   **Middleware:** Authentication (Firebase phone number validation), auto-user creation, role-based access control, request/response logging, and error handling.
+-   **Middleware:** Authentication (Firebase phone number validation), auto-user creation, role-based access control, request/response logging, error handling, and CORS (configured to allow all `.replit.app` domains for production deployments).
 -   **Data Access Layer:** Repository pattern (`IStorage` interface, `DbStorage` implementation with Drizzle ORM) supporting transactions.
+-   **Deployment Config:** PORT environment variable handling (Replit Autoscale compatibility), production static file serving from `dist/public/`, CORS whitelist for Replit domains.
 
 ### Database Schema
 -   **Core Tables:** `users` (phone-based auth, role), `categories` (scrap types, pricing), `vendors` (linked to users, location, KYC), `bookings` (customer orders with referenceId, paymentMode, rejectionReason, denormalized customer data, status, vendor FK), `bookingItems` (items per booking), `invoices` (booking invoice records), `settings` (platform configuration).

@@ -15,7 +15,11 @@ export const corsOptions = cors({
       ...(process.env.ALLOWED_ORIGINS?.split(',') || []), // Multiple domains support
     ].filter(Boolean); // Remove undefined values
 
+    // Check if origin matches allowed origins
     if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else if (origin && origin.includes('.replit.app')) {
+      // Allow all Replit deployment domains
       callback(null, true);
     } else {
       // In development, allow all origins for testing
