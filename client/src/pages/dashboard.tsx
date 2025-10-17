@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
@@ -243,7 +243,7 @@ function AcceptRejectDialog({
 }
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("customer");
+  const [activeTab, setActiveTab] = useState<string>("");
   const [adminFilter, setAdminFilter] = useState<"all" | "pending" | "completed">("all");
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [selectedBookingForRating, setSelectedBookingForRating] = useState<{ bookingId: string; vendorId: string } | null>(null);
@@ -255,6 +255,21 @@ export default function Dashboard() {
     queryKey: ["/api/users/me"],
     enabled: !!user,
   });
+
+  // Auto-set activeTab based on user role
+  useEffect(() => {
+    if (currentUser?.role && !activeTab) {
+      setActiveTab(currentUser.role);
+    }
+  }, [currentUser?.role, activeTab]);
+
+  // Prevent unauthorized tab switching
+  const handleTabChange = (value: string) => {
+    // Only allow switching to user's own role tab
+    if (value === currentUser?.role) {
+      setActiveTab(value);
+    }
+  };
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
     queryKey: ["/api/bookings"],
@@ -268,7 +283,7 @@ export default function Dashboard() {
 
   const { data: currentVendor } = useQuery<{ id: string }>({
     queryKey: ["/api/vendors/me"],
-    enabled: !!user && (currentUser?.role === "vendor"),
+    enabled: !!user && currentUser?.role === "vendor",
   });
 
   const assignVendorMutation = useMutation({
@@ -447,16 +462,29 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="customer" data-testid="tab-customer">Customer</TabsTrigger>
-            <TabsTrigger value="admin" data-testid="tab-admin">Admin</TabsTrigger>
-            <TabsTrigger value="vendor" data-testid="tab-vendor">Vendor</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
+          {/* Only show tabs based on user role */}
+          {currentUser?.role === "customer" && (
+            <TabsList className="grid w-full max-w-md grid-cols-1">
+              <TabsTrigger value="customer" data-testid="tab-customer">My Dashboard</TabsTrigger>
+            </TabsList>
+          )}
+          {currentUser?.role === "admin" && (
+            <TabsList className="grid w-full max-w-md grid-cols-1">
+              <TabsTrigger value="admin" data-testid="tab-admin">Admin Dashboard</TabsTrigger>
+            </TabsList>
+          )}
+          {currentUser?.role === "vendor" && (
+            <TabsList className="grid w-full max-w-md grid-cols-1">
+              <TabsTrigger value="vendor" data-testid="tab-vendor">Vendor Dashboard</TabsTrigger>
+            </TabsList>
+          )}
 
-          <TabsContent value="customer" className="space-y-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          {/* Customer View - Only render for customers */}
+          {currentUser?.role === "customer" && (
+            <TabsContent value="customer" className="space-y-8">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">My Dashboard</h1>
                 <p className="text-muted-foreground mt-1">Track your bookings and earnings</p>
@@ -551,7 +579,10 @@ export default function Dashboard() {
               )}
             </div>
           </TabsContent>
+          )}
 
+          {/* Admin View - Only render for admins */}
+          {currentUser?.role === "admin" && (
           <TabsContent value="admin" className="space-y-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -674,36 +705,26 @@ export default function Dashboard() {
               )}
             </div>
           </TabsContent>
+          )}
 
+          {/* Vendor View - Only render for vendors */}
+          {currentUser?.role === "vendor" && (
           <TabsContent value="vendor" className="space-y-8">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold font-[Poppins] bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                 Vendor Dashboard
-                {currentUser?.role === "admin" && " (Admin View)"}
               </h1>
               <p className="text-muted-foreground mt-1">
                 Track your assigned pickups and earnings.
               </p>
             </div>
 
-            {currentUser?.role === "customer" ? (
-              <Card className="p-8">
-                <div className="text-center text-muted-foreground">
-                  <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold mb-2">Vendor Access Only</h3>
-                  <p>This dashboard is only available for vendor and admin accounts.</p>
-                </div>
-              </Card>
-            ) : (
-              <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <StatCard 
-                title={currentUser?.role === "admin" ? "Total Bookings" : "Assigned Pickups"}
-                value={currentUser?.role === "admin" 
-                  ? bookings.length 
-                  : bookings.filter(b => 
-                      (b.status === "pending" || b.status === "accepted") && b.vendorId && b.vendorId === currentVendor?.id
-                    ).length} 
+                title="Assigned Pickups"
+                value={bookings.filter(b => 
+                  (b.status === "pending" || b.status === "accepted") && b.vendorId && b.vendorId === currentVendor?.id
+                ).length} 
                 icon={Package}
                 gradient="from-amber-500 to-orange-600"
               />
@@ -711,7 +732,7 @@ export default function Dashboard() {
                 title="Completed Today"
                 value={bookings.filter(b => {
                   if (b.status !== "completed") return false;
-                  if (currentUser?.role !== "admin" && b.vendorId !== currentVendor?.id) return false;
+                  if (b.vendorId !== currentVendor?.id) return false;
                   const today = new Date();
                   const completedDate = new Date(b.completedAt!);
                   return completedDate.toDateString() === today.toDateString();
@@ -722,8 +743,7 @@ export default function Dashboard() {
               <StatCard 
                 title="Total Earnings"
                 value={`₹${bookings.filter(b => 
-                  b.status === "completed" && 
-                  (currentUser?.role === "admin" || b.vendorId === currentVendor?.id)
+                  b.status === "completed" && b.vendorId === currentVendor?.id
                 ).reduce((sum, b) => sum + parseFloat(b.totalValue), 0).toFixed(0)}`} 
                 icon={IndianRupee}
                 gradient="from-violet-500 to-purple-600"
@@ -732,14 +752,10 @@ export default function Dashboard() {
 
             <div>
               <h2 className="text-2xl font-semibold mb-6">
-                {currentUser?.role === "admin" ? "All Bookings" : "Assigned Pickups"}
+                Assigned Pickups
               </h2>
               <div className="grid gap-6">
                 {bookings.filter(b => {
-                  if (currentUser?.role === "admin") {
-                    // Admin sees all bookings
-                    return true;
-                  }
                   // Vendor sees only assigned pickups (pending/accepted)
                   return (b.status === "pending" || b.status === "accepted") && b.vendorId && b.vendorId === currentVendor?.id;
                 }).map((booking) => (
@@ -762,7 +778,7 @@ export default function Dashboard() {
                       onDownloadInvoice={handleDownloadInvoice}
                       vendorInfo={booking.vendor}
                     />
-                    {(currentUser?.role === "vendor" || currentUser?.role === "admin") && booking.status === "pending" && (
+                    {booking.status === "pending" && (
                       <AcceptRejectDialog 
                         bookingId={booking.id}
                         onAccept={(paymentMode) => updateStatusMutation.mutate({ 
@@ -779,27 +795,23 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {bookings.filter(b => {
-                  if (currentUser?.role === "admin") {
-                    return true;
-                  }
                   return (b.status === "pending" || b.status === "accepted") && b.vendorId && b.vendorId === currentVendor?.id;
                 }).length === 0 && (
                   <p className="text-muted-foreground">
-                    {currentUser?.role === "admin" ? "No bookings found" : "No assigned pickups"}
+                    No assigned pickups
                   </p>
                 )}
               </div>
             </div>
 
-              {/* Vendor Reviews Section - Only for actual vendors */}
-              {currentUser?.role === "vendor" && currentVendor && (
-                <div className="mt-8">
-                  <VendorReviews vendorId={currentVendor.id} />
-                </div>
-              )}
-              </>
+            {/* Vendor Reviews Section - Only for actual vendors */}
+            {currentUser?.role === "vendor" && currentVendor && (
+              <div className="mt-8">
+                <VendorReviews vendorId={currentVendor.id} />
+              </div>
             )}
           </TabsContent>
+          )}
         </Tabs>
       </main>
 
