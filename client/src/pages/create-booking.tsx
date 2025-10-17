@@ -168,7 +168,7 @@ export default function CreateBooking() {
         <h1 className="text-3xl font-bold font-[Poppins] mb-2">Create New Booking</h1>
         <p className="text-muted-foreground mb-8">Select scrap items for pickup</p>
 
-        {profileLoading ? (
+        {profileLoading || isLoading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading...</p>
