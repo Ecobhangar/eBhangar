@@ -18,6 +18,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users", authenticateUser, requireRole("admin"), async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.patch("/api/users/:id/role", authenticateUser, requireRole("admin"), async (req, res) => {
     try {
       const { id } = req.params;
