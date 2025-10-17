@@ -57,15 +57,16 @@ export default function Login() {
     }
   };
 
-  const handleVerifyOTP = async () => {
-    if (!confirmationResult || otp.length !== 6) return;
+  const handleVerifyOTP = async (otpCode?: string) => {
+    const codeToVerify = otpCode || otp;
+    if (!confirmationResult || codeToVerify.length !== 6) return;
     
     setLoading(true);
     try {
-      await verifyOTP(confirmationResult, otp);
+      await verifyOTP(confirmationResult, codeToVerify);
       toast({
-        title: "Success",
-        description: "Login successful!",
+        title: "✅ Login successful",
+        description: "Welcome to eBhangar!",
       });
       setLocation('/dashboard');
     } catch (error: any) {
@@ -74,9 +75,13 @@ export default function Login() {
         description: error.message || "Invalid OTP. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
+  };
+
+  // Auto-verify when OTP is complete (from Web OTP API or manual entry)
+  const handleOTPComplete = (otpCode: string) => {
+    handleVerifyOTP(otpCode);
   };
 
   return (
@@ -97,6 +102,11 @@ export default function Login() {
                 placeholder="+91 98765 43210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && phone && !loading) {
+                    handleSendOTP();
+                  }
+                }}
                 className="mt-2"
                 data-testid="input-phone"
               />
@@ -118,12 +128,15 @@ export default function Login() {
               <p className="text-sm text-muted-foreground mb-4">
                 We sent a code to {phone}
               </p>
-              <OTPInput onChange={setOtp} />
+              <OTPInput 
+                onChange={setOtp} 
+                onComplete={handleOTPComplete}
+              />
             </div>
             <Button 
               className="w-full" 
               size="lg"
-              onClick={handleVerifyOTP}
+              onClick={() => handleVerifyOTP()}
               disabled={otp.length !== 6 || loading}
               data-testid="button-verify-otp"
             >
