@@ -57,6 +57,7 @@ export default function CreateBooking() {
 
   const { data: categories = [], isLoading } = useQuery<CategoryType[]>({
     queryKey: ["/api/categories"],
+    enabled: !!user,
   });
 
   // Check if user has saved address
