@@ -1,6 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users, vendors } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { authenticateUser, requireRole } from "./middleware/auth";
 import { insertUserSchema, insertCategorySchema, insertVendorSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
 import { sendBookingNotification } from "./email";
@@ -36,10 +39,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid role" });
       }
 
-      const user = await storage.updateUserRole(id, role);
+      // Get user data before role change
+      const userData = await storage.getUser(id);
+      if (!userData) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Use transaction to ensure atomic operation
+      const user = await db.transaction(async (tx) => {
+        // If changing to vendor, create vendor profile atomically
+        if (role === "vendor") {
+          // Check if vendor profile exists
+          const existingVendor = await tx.select().from(vendors).where(eq(vendors.userId, id));
+          
+          if (existingVendor.length === 0) {
+            // Create vendor profile (within transaction)
+            await tx.insert(vendors).values({
+              userId: id,
+              location: userData.address || "To be updated",
+              pinCode: userData.pinCode || null,
+              district: userData.district || "To be updated",
+              state: userData.state || "To be updated",
+              aadharNumber: null,
+              panNumber: null,
+              active: true
+            });
+          }
+        }
+        
+        // Update role (within same transaction)
+        const result = await tx.update(users).set({ role }).where(eq(users.id, id)).returning();
+        return result[0];
+      });
+      
       res.json(user);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ 
+        error: "Failed to update user role",
+        details: error.message 
+      });
     }
   });
 
