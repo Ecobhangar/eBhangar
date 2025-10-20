@@ -1,6 +1,26 @@
-node_modules
-dist
+# Ignore build/output folders
+dist/
+build/
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# System/cache files
+.local/
+*.bin
+*.log
+Thumbs.db
 .DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+
+# Editor related
+.vscode/
+.idea/
+
+# Replit files
+replit/
+*.replit
+
+# Misc
+*.tmp
