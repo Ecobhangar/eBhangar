@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import cors from "cors"; // ✅ Direct import for control
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
@@ -8,11 +8,11 @@ import { sql } from "drizzle-orm";
 
 const app = express();
 
-// ✅ FIX 1: CORS configuration for Render + local
+// ✅ FIXED CORS CONFIGURATION (Render + Local)
 app.use(cors({
   origin: [
-    "https://ebhangar-fronted.onrender.com", // Render frontend
-    "http://localhost:5173" // Local dev
+    "https://ebhangar-fronted.onrender.com", // Your Render frontend
+    "http://localhost:5173" // Local dev environment
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
@@ -21,12 +21,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// ✅ Root route (for quick check)
+// ✅ Root route for quick health check
 app.get("/", (_req, res) => {
   res.send("✅ eBhangar backend running successfully on Render!");
 });
 
-// ✅ Logging middleware
+// ✅ Request logger middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -51,7 +51,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Category Seeder
+// ✅ Category Seeder (runs once)
 async function seedCategoriesIfEmpty() {
   try {
     const [result] = await db.select({ count: sql<number>`count(*)` }).from(categories);
@@ -79,10 +79,12 @@ async function seedCategoriesIfEmpty() {
 }
 
 (async () => {
+  // Auto-seed database
   await seedCategoriesIfEmpty();
+
   const server = await registerRoutes(app);
 
-  // Error handler
+  // ✅ Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -90,23 +92,17 @@ async function seedCategoriesIfEmpty() {
     log(`❌ ${status} - ${message}`);
   });
 
-  // Vite setup (only dev)
+  // ✅ Setup static / vite (only dev)
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ✅ FIX 2: Render dynamic port binding
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5001;
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`🚀 eBhangar backend running on port ${port}`);
-    },
-  );
+  // ✅ FIXED PORT CONFIGURATION (Render friendly)
+  const PORT = process.env.PORT || 5001;
+
+  server.listen(PORT, "0.0.0.0", () => {
+    log(`🚀 eBhangar backend running on port ${PORT}`);
+  });
 })();
