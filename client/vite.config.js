@@ -4,9 +4,9 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-  root: path.resolve(__dirname, "client"),
+  root: ".", // ✅ Root fix for Vercel
   build: {
-    outDir: path.resolve(__dirname, "dist"), // ✅ FIXED
+    outDir: "dist", // ✅ Now output will be client/dist
     emptyOutDir: true
   },
   resolve: {
