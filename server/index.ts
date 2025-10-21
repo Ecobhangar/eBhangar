@@ -1,16 +1,32 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors"; // ✅ Direct import for control
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { corsOptions } from "./config/cors";
 import { db } from "./db";
 import { categories } from "../shared/schema";
 import { sql } from "drizzle-orm";
 
 const app = express();
-app.use(corsOptions); // Enable CORS for external deployments
+
+// ✅ FIX 1: CORS configuration for Render + local
+app.use(cors({
+  origin: [
+    "https://ebhangar-fronted.onrender.com", // Render frontend
+    "http://localhost:5173" // Local dev
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// ✅ Root route (for quick check)
+app.get("/", (_req, res) => {
+  res.send("✅ eBhangar backend running successfully on Render!");
+});
+
+// ✅ Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -26,14 +42,8 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
+      if (capturedJsonResponse) logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      if (logLine.length > 80) logLine = logLine.slice(0, 79) + "…";
       log(logLine);
     }
   });
@@ -41,16 +51,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Auto-seed categories on startup if empty
+// ✅ Category Seeder
 async function seedCategoriesIfEmpty() {
   try {
-    // Efficient check: count instead of loading all rows
     const [result] = await db.select({ count: sql<number>`count(*)` }).from(categories);
     const count = Number(result?.count) || 0;
-    
+
     if (count === 0) {
-      log('🌱 Seeding categories...');
-      
+      log("🌱 Seeding categories...");
       const seedData = [
         { id: '7bf337dc-dfc7-4512-90ba-3995fd09787d', name: 'Old AC', unit: 'unit', minRate: '800.00', maxRate: '1500.00', icon: 'AirVent' },
         { id: '3328fffe-35d4-4efc-b66e-41b0adc7da34', name: 'Refrigerator', unit: 'unit', minRate: '1200.00', maxRate: '2000.00', icon: 'Refrigerator' },
@@ -62,42 +70,34 @@ async function seedCategoriesIfEmpty() {
         { id: 'd97876ff-d1ea-4bf7-af02-50c9acb93c89', name: 'Books', unit: 'kg', minRate: '12.00', maxRate: '18.00', icon: 'BookOpen' },
         { id: '2afce35f-5e04-4afd-8bda-376bbb87eeda', name: 'Clothes', unit: 'kg', minRate: '5.00', maxRate: '10.00', icon: 'Shirt' }
       ];
-      
-      // Use onConflictDoNothing to prevent crashes on duplicate IDs
       await db.insert(categories).values(seedData).onConflictDoNothing();
-      log('✅ Categories seeded successfully!');
+      log("✅ Categories seeded successfully!");
     }
   } catch (error) {
-    log(`⚠️  Category seed error: ${error}`);
+    log(`⚠️ Category seed error: ${error}`);
   }
 }
 
 (async () => {
-  // Seed categories first
   await seedCategoriesIfEmpty();
-  
   const server = await registerRoutes(app);
 
+  // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
-    throw err;
+    log(`❌ ${status} - ${message}`);
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Vite setup (only dev)
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // For Replit deployments, PORT is automatically set by the platform
-  // For local development, default to 5001
+  // ✅ FIX 2: Render dynamic port binding
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5001;
   server.listen(
     {
@@ -106,7 +106,7 @@ async function seedCategoriesIfEmpty() {
       reusePort: true,
     },
     () => {
-      log(`serving on port ${port}`);
+      log(`🚀 eBhangar backend running on port ${port}`);
     },
   );
 })();
