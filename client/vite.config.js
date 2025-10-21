@@ -4,13 +4,16 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  root: path.resolve(__dirname, "client"),
+  build: {
+    outDir: path.resolve(__dirname, "dist"), // ✅ FIXED
+    emptyOutDir: true
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
-    },
-  },
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-  },
+      "@shared": path.resolve(__dirname, "../shared"),
+      "@assets": path.resolve(__dirname, "../attached_assets")
+    }
+  }
 });
