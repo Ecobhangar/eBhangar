@@ -1,0 +1,45 @@
+# render.yaml
+# =====================================
+# 🌐 eBhangar Full Stack Deployment
+# Frontend (Vite React) + Backend (Express/Node)
+# =====================================
+
+services:
+  # =====================================
+  # 🖥️ FRONTEND SERVICE (Vite React App)
+  # =====================================
+  - type: web
+    name: ebhangar-frontend
+    env: static
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    plan: free
+    headers:
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: "*"
+
+  # =====================================
+  # ⚙️ BACKEND SERVICE (Express Server)
+  # =====================================
+  - type: web
+    name: ebhangar-backend
+    env: node
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # 👇 नीचे अपनी API keys जोड़ना ना भूलना
+      - key: DATABASE_URL
+        value: your_postgres_url_here
+      - key: FIREBASE_API_KEY
+        value: your_firebase_key_here
+      - key: JWT_SECRET
+        value: your_secret_key_here
