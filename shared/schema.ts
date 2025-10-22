@@ -3,6 +3,7 @@ import { pgTable, text, varchar, integer, decimal, timestamp, boolean } from "dr
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// ---------------- USERS ----------------
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   phoneNumber: text("phone_number").notNull().unique(),
@@ -15,15 +16,17 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ---------------- CATEGORIES ----------------
 export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull().unique(),
   unit: text("unit").notNull(), // unit, kg
-  minRate: decimal("min_rate", { precision: 10, scale: 2 }).notNull(),
-  maxRate: decimal("max_rate", { precision: 10, scale: 2 }).notNull(),
+  minRate: decimal("minRate", { precision: 10, scale: 2 }).notNull(),
+  maxRate: decimal("maxRate", { precision: 10, scale: 2 }).notNull(),
   icon: text("icon").notNull(), // icon name for frontend
 });
 
+// ---------------- VENDORS ----------------
 export const vendors = pgTable("vendors", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
@@ -38,6 +41,7 @@ export const vendors = pgTable("vendors", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ---------------- BOOKINGS ----------------
 export const bookings = pgTable("bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   referenceId: text("reference_id").unique(),
@@ -58,6 +62,7 @@ export const bookings = pgTable("bookings", {
   completedAt: timestamp("completed_at"),
 });
 
+// ---------------- BOOKING ITEMS ----------------
 export const bookingItems = pgTable("booking_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
@@ -68,6 +73,7 @@ export const bookingItems = pgTable("booking_items", {
   value: decimal("value", { precision: 10, scale: 2 }).notNull(),
 });
 
+// ---------------- REVIEWS ----------------
 export const reviews = pgTable("reviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   bookingId: varchar("booking_id").references(() => bookings.id).notNull().unique(),
@@ -78,6 +84,7 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ---------------- INVOICES ----------------
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   bookingId: varchar("booking_id").references(() => bookings.id).notNull().unique(),
@@ -88,88 +95,4 @@ export const invoices = pgTable("invoices", {
   vendorName: text("vendor_name").notNull(),
   vendorPhone: text("vendor_phone").notNull(),
   totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(),
-  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull().default("0"),
-  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull(),
-  paymentMode: text("payment_mode").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const settings = pgTable("settings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  key: text("key").notNull().unique(),
-  value: text("value").notNull(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertCategorySchema = createInsertSchema(categories).omit({
-  id: true,
-});
-
-export const insertVendorSchema = createInsertSchema(vendors).omit({
-  id: true,
-  createdAt: true,
-  activePickups: true,
-});
-
-export const insertBookingSchema = createInsertSchema(bookings).omit({
-  id: true,
-  createdAt: true,
-  completedAt: true,
-  status: true,
-  referenceId: true,
-});
-
-export const insertBookingItemSchema = createInsertSchema(bookingItems).omit({
-  id: true,
-});
-
-export const insertReviewSchema = createInsertSchema(reviews)
-  .omit({
-    id: true,
-    createdAt: true,
-  })
-  .extend({
-    rating: z.number().int().min(1).max(5),
-    comment: z.string().min(1).max(500).optional(),
-  });
-
-export const insertInvoiceSchema = createInsertSchema(invoices).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertSettingsSchema = createInsertSchema(settings).omit({
-  id: true,
-  updatedAt: true,
-});
-
-// Types
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-
-export type Category = typeof categories.$inferSelect;
-export type InsertCategory = z.infer<typeof insertCategorySchema>;
-
-export type Vendor = typeof vendors.$inferSelect;
-export type InsertVendor = z.infer<typeof insertVendorSchema>;
-
-export type Booking = typeof bookings.$inferSelect;
-export type InsertBooking = z.infer<typeof insertBookingSchema>;
-
-export type BookingItem = typeof bookingItems.$inferSelect;
-export type InsertBookingItem = z.infer<typeof insertBookingItemSchema>;
-
-export type Review = typeof reviews.$inferSelect;
-export type InsertReview = z.infer<typeof insertReviewSchema>;
-
-export type Invoice = typeof invoices.$inferSelect;
-export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
-
-export type Settings = typeof settings.$inferSelect;
-export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+  platformFee: decimal("platform_fee", { pr_
