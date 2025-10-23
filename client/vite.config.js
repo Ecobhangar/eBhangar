@@ -4,16 +4,24 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-  root: ".", // ✅ Root fix for Vercel
+  root: ".", // Project root
   build: {
-    outDir: "dist", // ✅ Now output will be client/dist
-    emptyOutDir: true
+    outDir: "dist", // Build output directory
+    emptyOutDir: true,
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
       "@shared": path.resolve(__dirname, "../shared"),
-      "@assets": path.resolve(__dirname, "../attached_assets")
-    }
-  }
+      "@assets": path.resolve(__dirname, "../attached_assets"),
+    },
+  },
+  server: {
+    port: 5173,
+  },
+  preview: {
+    port: 4173,
+  },
+  // ✅ Important for Render + React Router
+  base: "/",
 });
