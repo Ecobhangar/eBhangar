@@ -4,9 +4,10 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-  root: ".", // Project root
+  root: ".", // Keep root as project root
+  base: "/", // ✅ Ensure correct asset paths for Render
   build: {
-    outDir: "dist", // Build output directory
+    outDir: "dist",
     emptyOutDir: true,
   },
   resolve: {
@@ -19,9 +20,4 @@ export default defineConfig({
   server: {
     port: 5173,
   },
-  preview: {
-    port: 4173,
-  },
-  // ✅ Important for Render + React Router
-  base: "/",
 });
