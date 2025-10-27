@@ -63,101 +63,18 @@ export default function Login() {
     
     setLoading(true);
     try {
+      // ✅ Step 1: Verify Firebase OTP
       await verifyOTP(confirmationResult, codeToVerify);
-      toast({
-        title: "✅ Login successful",
-        description: "Welcome to eBhangar!",
+
+      // ✅ Step 2: Get Firebase Token
+      const idToken = await user?.getIdToken();
+
+      // ✅ Step 3: Fetch user details (role) from backend
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
       });
-      setLocation('/dashboard');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Invalid OTP. Please try again.",
-        variant: "destructive",
-      });
-      setLoading(false);
-    }
-  };
+      const data = await res.json();
 
-  // Auto-verify when OTP is complete (from Web OTP API or manual entry)
-  const handleOTPComplete = (otpCode: string) => {
-    handleVerifyOTP(otpCode);
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-background p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="flex flex-col items-center mb-8">
-          <Logo size="large" />
-          <p className="text-sm text-muted-foreground mt-2">Smart Scrap Collection</p>
-        </div>
-
-        {step === "phone" ? (
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="phone" className="text-base">Mobile Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && phone && !loading) {
-                    handleSendOTP();
-                  }
-                }}
-                className="mt-2"
-                data-testid="input-phone"
-              />
-            </div>
-            <Button 
-              className="w-full" 
-              size="lg"
-              onClick={handleSendOTP}
-              disabled={!phone || loading}
-              data-testid="button-send-otp"
-            >
-              {loading ? "Sending..." : "Send OTP"}
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div>
-              <Label className="text-base">Enter OTP</Label>
-              <p className="text-sm text-muted-foreground mb-4">
-                We sent a code to {phone}
-              </p>
-              <OTPInput 
-                onChange={setOtp} 
-                onComplete={handleOTPComplete}
-              />
-            </div>
-            <Button 
-              className="w-full" 
-              size="lg"
-              onClick={() => handleVerifyOTP()}
-              disabled={otp.length !== 6 || loading}
-              data-testid="button-verify-otp"
-            >
-              {loading ? "Verifying..." : "Verify & Continue"}
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full"
-              onClick={() => {
-                setStep("phone");
-                setOtp("");
-              }}
-              disabled={loading}
-              data-testid="button-change-number"
-            >
-              Change Number
-            </Button>
-          </div>
-        )}
-      </Card>
-      <div id="recaptcha-container"></div>
-    </div>
-  );
-}
+      // ✅ Step 4: Save login session in LocalS
