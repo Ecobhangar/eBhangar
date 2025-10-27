@@ -42,39 +42,4 @@ export default function Login() {
       const result = await sendOTP(formattedPhone, recaptchaVerifier);
       setConfirmationResult(result);
       setStep("otp");
-      toast({
-        title: "OTP Sent",
-        description: "Please check your phone for the verification code.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send OTP. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (otpCode?: string) => {
-    const codeToVerify = otpCode || otp;
-    if (!confirmationResult || codeToVerify.length !== 6) return;
-    
-    setLoading(true);
-    try {
-      // ✅ Step 1: Verify Firebase OTP
-      await verifyOTP(confirmationResult, codeToVerify);
-
-      // ✅ Step 2: Get Firebase Token
-      const idToken = await user?.getIdToken();
-
-      // ✅ Step 3: Fetch user details (role) from backend
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
-      });
-      const data = await res.json();
-
-      // ✅ Step 4: Save login session in LocalS
+      toast({ title: "OTP Sent", descripti
