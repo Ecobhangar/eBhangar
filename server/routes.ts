@@ -1,20 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
-import { users, vendors } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { authenticateUser, requireRole } from "./middleware/auth";
-import { insertCategorySchema } from "@shared/schema";
+import { authenticateUser } from "./middleware/auth";
 import PDFDocument from "pdfkit";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // ✅ Health Check
-  app.get("/", (req, res) => {
-    res.json({ status: "✅ eBhangar Backend Live" });
-  });
-
-  // ✅ OTP Verify Route (frontend login fix)
+  /**
+   * ✅ OTP Verify Route (Fix for frontend login)
+   */
   app.post("/api/auth/verify", async (req, res) => {
     try {
       const { phone, otp } = req.body;
@@ -23,8 +16,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Phone number is required" });
       }
 
-      // Mock Firebase test numbers for Render testing
-      const testNumbers = ["+917208360413", "+91922655355", "+919226255355"];
+      // Mock Firebase test numbers
+      const testNumbers = ["+917208360413", "+919226255355"];
 
       if (testNumbers.includes(phone) && otp === "123456") {
         return res.json({
@@ -35,14 +28,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // OTP invalid
       return res.status(404).json({ error: "Invalid or Not Found OTP" });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
   });
 
-  // ✅ For frontend auth check
+  /**
+   * ✅ Auth Check Route (frontend fetches role after login)
+   */
   app.get("/api/auth/me", authenticateUser, async (req, res) => {
     try {
       const u = await storage.getUser(req.user!.id);
@@ -58,7 +52,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ✅ Sample category route to verify backend
+  /**
+   * ✅ Categories route (for frontend category listing)
+   */
   app.get("/api/categories", async (req, res) => {
     try {
       const categories = await storage.getAllCategories();
@@ -68,7 +64,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ✅ Fallback for invalid routes (prevent "Not Found" text)
+  /**
+   * ✅ Invoice PDF Example (optional test)
+   */
+  app.get("/api/test/pdf", async (req, res) => {
+    try {
+      const doc = new PDFDocument();
+      res.setHeader("Content-Type", "application/pdf");
+      doc.pipe(res);
+      doc.fontSize(20).text("eBhangar Test PDF ✅", { align: "center" });
+      doc.end();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  /**
+   * ✅ Fallback for invalid routes
+   */
   app.use((req, res) => {
     res.status(404).json({ error: "Route not found" });
   });
