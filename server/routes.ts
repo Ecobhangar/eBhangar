@@ -5,14 +5,44 @@ import { db } from "./db";
 import { users, vendors } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { authenticateUser, requireRole } from "./middleware/auth";
-import {
-  insertCategorySchema,
-  insertReviewSchema,
-} from "@shared/schema";
-import { sendBookingNotification } from "./email";
+import { insertCategorySchema, insertReviewSchema } from "@shared/schema";
 import PDFDocument from "pdfkit";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // ✅ Health check route (for Render monitoring)
+  app.get("/", (req, res) => {
+    res.send("✅ eBhangar Backend Live");
+  });
+
+  // ✅ OTP verification route (fix for “Not Found” issue)
+  app.post("/api/auth/verify", async (req, res) => {
+    try {
+      const { phone, otp } = req.body;
+
+      if (!phone) {
+        return res.status(400).json({ error: "Phone number is required" });
+      }
+      if (!otp) {
+        return res.status(400).json({ error: "OTP is required" });
+      }
+
+      // Mock Firebase test numbers (for local/testing)
+      const testNumbers = ["+917208360413", "+919226255355"];
+
+      if (testNumbers.includes(phone) && otp === "123456") {
+        return res.json({
+          id: "test-user-" + phone.slice(-4),
+          phone,
+          name: "Test User",
+          role: "customer",
+        });
+      }
+
+      return res.status(404).json({ error: "OTP not found or invalid" });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 
   // ✅ Fix for frontend login “Not Found” issue
   // Frontend calls /api/auth/me after OTP verification
@@ -183,32 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ✅ create server
   const httpServer = createServer(app);
   return httpServer;
 }
-// ✅ OTP verification route (fix for "Not Found" issue)
-app.post("/api/auth/verify", async (req, res) => {
-  try {
-    const { phone } = req.body;
-
-    if (!phone) {
-      return res.status(400).json({ error: "Phone number is required" });
-    }
-
-    // Mock testing behavior for Firebase test numbers
-    // Firebase test numbers don’t really send OTPs
-    if (phone === "+917208360413" || phone === "+919226255355") {
-      // return dummy user data (for frontend login)
-      return res.json({
-        id: "test-user",
-        phone,
-        name: "Test User",
-        role: "customer",
-      });
-    }
-
-    return res.status(404).json({ error: "OTP not found or invalid" });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
