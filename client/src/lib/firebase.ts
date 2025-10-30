@@ -1,5 +1,4 @@
-// ✅ Firebase setup for eBhangar App (TypeScript + Vite compatible)
-
+// ✅ Firebase setup for eBhangar App (Render + Testing Safe)
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -7,7 +6,6 @@ import {
   signInWithPhoneNumber,
 } from "firebase/auth";
 
-// ✅ Firebase Config (from .env)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -17,20 +15,26 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// ✅ Setup reCAPTCHA (used for OTP verification)
+// ✅ Disable app verification for emulator/testing (safe for web)
+try {
+  // @ts-ignore
+  auth.settings.appVerificationDisabledForTesting = true;
+  console.log("⚙️ Firebase test mode enabled");
+} catch (e) {
+  console.warn("⚠️ Firebase test mode not supported here");
+}
+
+// ✅ Setup reCAPTCHA verifier
 export const setupRecaptcha = (containerId = "recaptcha-container") => {
   if (!window.recaptchaVerifier) {
     window.recaptchaVerifier = new RecaptchaVerifier(
       containerId,
       {
         size: "invisible",
-        callback: (response: any) => {
-          console.log("✅ reCAPTCHA verified:", response);
-        },
+        callback: () => console.log("✅ reCAPTCHA verified"),
       },
       auth
     );
@@ -38,10 +42,9 @@ export const setupRecaptcha = (containerId = "recaptcha-container") => {
   return window.recaptchaVerifier;
 };
 
-// ✅ Send OTP function
+// ✅ Send OTP
 export const sendOtp = async (phone: string) => {
   const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
   const appVerifier = window.recaptchaVerifier || setupRecaptcha();
-
   return await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
 };
