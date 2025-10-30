@@ -1,4 +1,4 @@
-// ✅ Firebase setup for eBhangar App (Render + Testing Safe)
+// ✅ Firebase setup for eBhangar (production + test safe)
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -15,26 +15,33 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// ✅ Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// ✅ Disable app verification for emulator/testing (safe for web)
+// ✅ Safe check for test mode (only if property exists)
 try {
-  // @ts-ignore
-  auth.settings.appVerificationDisabledForTesting = true;
-  console.log("⚙️ Firebase test mode enabled");
+  if (auth && "settings" in auth) {
+    // @ts-ignore
+    auth.settings.appVerificationDisabledForTesting = true;
+    console.log("⚙️ Firebase test mode enabled ✅");
+  } else {
+    console.warn("⚠️ Firebase auth.settings not available yet.");
+  }
 } catch (e) {
-  console.warn("⚠️ Firebase test mode not supported here");
+  console.warn("⚠️ Skipping appVerificationDisabledForTesting:", e);
 }
 
-// ✅ Setup reCAPTCHA verifier
+// ✅ Create or reuse reCAPTCHA verifier
 export const setupRecaptcha = (containerId = "recaptcha-container") => {
   if (!window.recaptchaVerifier) {
     window.recaptchaVerifier = new RecaptchaVerifier(
       containerId,
       {
         size: "invisible",
-        callback: () => console.log("✅ reCAPTCHA verified"),
+        callback: (response: any) => {
+          console.log("✅ reCAPTCHA verified:", response);
+        },
       },
       auth
     );
@@ -42,9 +49,17 @@ export const setupRecaptcha = (containerId = "recaptcha-container") => {
   return window.recaptchaVerifier;
 };
 
-// ✅ Send OTP
+// ✅ Send OTP with error handling
 export const sendOtp = async (phone: string) => {
   const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
   const appVerifier = window.recaptchaVerifier || setupRecaptcha();
-  return await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+
+  try {
+    const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+    console.log("📩 OTP sent successfully to", formattedPhone);
+    return result;
+  } catch (error) {
+    console.error("❌ OTP send error:", error);
+    throw error;
+  }
 };
