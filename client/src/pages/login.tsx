@@ -1,95 +1,126 @@
 import { useState, useEffect } from "react";
-import { auth, setupRecaptcha, sendOtp } from "../firebase";
+import { auth, setupRecaptcha, sendOtp } from "../lib/firebase";
+import { signInWithCredential, PhoneAuthProvider } from "firebase/auth";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Initialize reCAPTCHA on mount
+  // ✅ Initialize reCAPTCHA safely (only once)
   useEffect(() => {
-    setupRecaptcha();
+    try {
+      setupRecaptcha("recaptcha-container");
+      console.log("✅ reCAPTCHA ready");
+    } catch (err) {
+      console.error("⚠️ reCAPTCHA setup failed:", err);
+    }
   }, []);
 
-  // ✅ Handle Send OTP
+  // ✅ Send OTP
   const handleSendOtp = async () => {
+    if (!phone) return alert("Please enter your mobile number");
+
+    const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const result = await sendOtp(phone);
+      const result = await sendOtp(formattedPhone);
       setConfirmationResult(result);
       setOtpSent(true);
-      alert("OTP Sent ✅");
+      alert(`✅ OTP sent successfully to ${formattedPhone}`);
     } catch (error: any) {
-      console.error("Send OTP Error:", error);
-      alert(error.message || "Failed to send OTP");
+      console.error("❌ OTP Send Error:", error);
+      alert("Failed to send OTP: " + (error.message || "Unknown error"));
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Handle Verify OTP
+  // ✅ Verify OTP
   const handleVerifyOtp = async () => {
+    if (!otp) return alert("Please enter OTP");
+    if (!confirmationResult) return alert("OTP session expired. Please resend.");
+
+    setLoading(true);
     try {
-      if (!confirmationResult) {
-        alert("Please send OTP first!");
-        return;
-      }
-      await confirmationResult.confirm(otp);
-      alert("Login Successful 🎉");
-      window.location.href = "/";
+      const credential = PhoneAuthProvider.credential(
+        confirmationResult.verificationId,
+        otp
+      );
+      await signInWithCredential(auth, credential);
+
+      alert("✅ Login Successful!");
+      window.location.href = "/"; // redirect to homepage after login
     } catch (error: any) {
-      console.error("Verify OTP Error:", error);
-      alert("Invalid OTP ❌");
+      console.error("❌ OTP Verify Error:", error);
+      alert("Invalid OTP: " + (error.message || "Unknown error"));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-sm">
-        <h2 className="text-2xl font-bold text-center mb-4">Login to eBhangar</h2>
+      {/* 🔹 Mobile Input Section */}
+      {!otpSent ? (
+        <div className="bg-white p-8 rounded-2xl shadow-md w-80">
+          <h2 className="text-xl font-semibold mb-4 text-center">
+            Enter Mobile Number
+          </h2>
+          <input
+            type="tel"
+            placeholder="+919226255355"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="border p-2 rounded-md w-full mb-4"
+          />
+          <button
+            onClick={handleSendOtp}
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md w-full"
+          >
+            {loading ? "Sending..." : "Send OTP"}
+          </button>
+        </div>
+      ) : (
+        // 🔹 OTP Verification Section
+        <div className="bg-white p-8 rounded-2xl shadow-md w-80">
+          <h2 className="text-xl font-semibold mb-4 text-center">
+            Enter OTP
+          </h2>
+          <input
+            type="text"
+            placeholder="123456"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            className="border p-2 rounded-md w-full mb-4"
+          />
+          <button
+            onClick={handleVerifyOtp}
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md w-full"
+          >
+            {loading ? "Verifying..." : "Verify OTP"}
+          </button>
 
-        {!otpSent ? (
-          <>
-            <label className="block mb-2 font-medium text-gray-700">Mobile Number</label>
-            <input
-              type="tel"
-              placeholder="+919226255355"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md mb-4"
-            />
-            <button
-              onClick={handleSendOtp}
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md w-full"
-            >
-              {loading ? "Sending..." : "Send OTP"}
-            </button>
-          </>
-        ) : (
-          <>
-            <label className="block mb-2 font-medium text-gray-700">Enter OTP</label>
-            <input
-              type="text"
-              placeholder="123456"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md mb-4"
-            />
-            <button
-              onClick={handleVerifyOtp}
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md w-full"
-            >
-              {loading ? "Verifying..." : "Verify OTP"}
-            </button>
-          </>
-        )}
-      </div>
+          {/* 🔁 Option to resend OTP */}
+          <button
+            onClick={() => {
+              setOtpSent(false);
+              setOtp("");
+              setConfirmationResult(null);
+            }}
+            className="mt-3 text-sm text-blue-600 underline"
+          >
+            Resend OTP
+          </button>
+        </div>
+      )}
 
-      {/* ✅ Must be rendered */}
+      {/* 🔹 Required invisible reCAPTCHA container */}
       <div id="recaptcha-container"></div>
     </div>
   );
