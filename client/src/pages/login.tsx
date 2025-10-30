@@ -1,86 +1,75 @@
 import { useState, useEffect } from "react";
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, setupRecaptcha, sendOtp } from "../firebase";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
-  // ✅ Initialize reCAPTCHA once
+  // ✅ Initialize reCAPTCHA only once
   useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        {
-          size: "invisible",
-          callback: (response) => {
-            console.log("reCAPTCHA verified ✅");
-          },
-        },
-        auth
-      );
-    }
+    setupRecaptcha("recaptcha-container");
   }, []);
 
   // ✅ Send OTP
-  const sendOtp = async () => {
-    try {
-      const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
-      const appVerifier = window.recaptchaVerifier;
+  const handleSendOtp = async () => {
+    if (!phone) return alert("Please enter phone number");
 
-      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+    try {
+      const result = await sendOtp(phone);
       setConfirmationResult(result);
       setOtpSent(true);
       alert("OTP Sent ✅");
-    } catch (error) {
+    } catch (error: any) {
       console.error("OTP Send Error:", error);
-      alert(error.message);
+      alert("Error sending OTP: " + error.message);
     }
   };
 
   // ✅ Verify OTP
-  const verifyOtp = async () => {
+  const handleVerifyOtp = async () => {
+    if (!confirmationResult) return alert("No OTP request found");
     try {
       await confirmationResult.confirm(otp);
       alert("Login Successful ✅");
+      window.location.href = "/dashboard"; // redirect after login
     } catch (error) {
       alert("Invalid OTP ❌");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       {!otpSent ? (
-        <div className="bg-white p-6 rounded-2xl shadow-md">
-          <h2 className="text-xl font-bold mb-4">Enter Mobile Number</h2>
+        <div className="bg-white p-6 rounded-xl shadow-md w-80">
+          <h2 className="text-lg font-bold mb-3">Enter Mobile Number</h2>
           <input
             type="tel"
-            placeholder="+919226255355"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="border p-2 rounded-md w-full mb-4"
+            placeholder="Enter number e.g. 9226255355"
+            className="border p-2 rounded-md w-full mb-3"
           />
           <button
-            onClick={sendOtp}
+            onClick={handleSendOtp}
             className="bg-green-600 text-white py-2 px-4 rounded-md w-full"
           >
             Send OTP
           </button>
         </div>
       ) : (
-        <div className="bg-white p-6 rounded-2xl shadow-md">
-          <h2 className="text-xl font-bold mb-4">Enter OTP</h2>
+        <div className="bg-white p-6 rounded-xl shadow-md w-80">
+          <h2 className="text-lg font-bold mb-3">Enter OTP</h2>
           <input
             type="text"
-            placeholder="123456"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            className="border p-2 rounded-md w-full mb-4"
+            placeholder="Enter OTP"
+            className="border p-2 rounded-md w-full mb-3"
           />
           <button
-            onClick={verifyOtp}
+            onClick={handleVerifyOtp}
             className="bg-green-600 text-white py-2 px-4 rounded-md w-full"
           >
             Verify OTP
@@ -88,7 +77,7 @@ export default function Login() {
         </div>
       )}
 
-      {/* ✅ This div is critical */}
+      {/* ✅ Required for Firebase reCAPTCHA */}
       <div id="recaptcha-container"></div>
     </div>
   );
