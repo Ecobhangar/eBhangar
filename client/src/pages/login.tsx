@@ -1,83 +1,95 @@
 import { useState, useEffect } from "react";
-import { auth, setupRecaptcha, sendOtp } from "../firebase";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "../firebase";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Initialize reCAPTCHA only once
   useEffect(() => {
-    setupRecaptcha("recaptcha-container");
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible",
+          callback: () => console.log("reCAPTCHA verified ✅"),
+        }
+      );
+    }
   }, []);
 
-  // ✅ Send OTP
-  const handleSendOtp = async () => {
-    if (!phone) return alert("Please enter phone number");
-
+  const sendOtp = async () => {
     try {
-      const result = await sendOtp(phone);
+      setLoading(true);
+      const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
+      const appVerifier = window.recaptchaVerifier;
+      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       setConfirmationResult(result);
       setOtpSent(true);
-      alert("OTP Sent ✅");
+      alert("OTP sent successfully ✅");
     } catch (error: any) {
-      console.error("OTP Send Error:", error);
-      alert("Error sending OTP: " + error.message);
+      alert(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Verify OTP
-  const handleVerifyOtp = async () => {
-    if (!confirmationResult) return alert("No OTP request found");
+  const verifyOtp = async () => {
     try {
+      setLoading(true);
       await confirmationResult.confirm(otp);
-      alert("Login Successful ✅");
-      window.location.href = "/dashboard"; // redirect after login
-    } catch (error) {
+      alert("Login successful 🎉");
+      window.location.href = "/";
+    } catch (error: any) {
       alert("Invalid OTP ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-screen">
       {!otpSent ? (
-        <div className="bg-white p-6 rounded-xl shadow-md w-80">
-          <h2 className="text-lg font-bold mb-3">Enter Mobile Number</h2>
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-xl font-bold mb-4">Enter Mobile Number</h2>
           <input
             type="tel"
+            placeholder="+919226255355"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="Enter number e.g. 9226255355"
-            className="border p-2 rounded-md w-full mb-3"
+            className="border p-2 rounded-md w-full mb-4"
           />
           <button
-            onClick={handleSendOtp}
+            onClick={sendOtp}
+            disabled={loading}
             className="bg-green-600 text-white py-2 px-4 rounded-md w-full"
           >
-            Send OTP
+            {loading ? "Sending..." : "Send OTP"}
           </button>
         </div>
       ) : (
-        <div className="bg-white p-6 rounded-xl shadow-md w-80">
-          <h2 className="text-lg font-bold mb-3">Enter OTP</h2>
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-xl font-bold mb-4">Enter OTP</h2>
           <input
             type="text"
+            placeholder="123456"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            placeholder="Enter OTP"
-            className="border p-2 rounded-md w-full mb-3"
+            className="border p-2 rounded-md w-full mb-4"
           />
           <button
-            onClick={handleVerifyOtp}
+            onClick={verifyOtp}
+            disabled={loading}
             className="bg-green-600 text-white py-2 px-4 rounded-md w-full"
           >
-            Verify OTP
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
         </div>
       )}
-
-      {/* ✅ Required for Firebase reCAPTCHA */}
       <div id="recaptcha-container"></div>
     </div>
   );
