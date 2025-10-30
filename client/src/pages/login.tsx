@@ -9,15 +9,16 @@ export default function Login() {
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Initialize reCAPTCHA only once
   useEffect(() => {
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
-        auth,
         "recaptcha-container",
         {
           size: "invisible",
           callback: () => console.log("reCAPTCHA verified ✅"),
-        }
+        },
+        auth // ✅ Correct placement of auth here (third argument)
       );
     }
   }, []);
@@ -27,11 +28,13 @@ export default function Login() {
       setLoading(true);
       const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
       const appVerifier = window.recaptchaVerifier;
+
       const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       setConfirmationResult(result);
       setOtpSent(true);
-      alert("OTP sent successfully ✅");
+      alert("OTP Sent ✅");
     } catch (error: any) {
+      console.error("OTP Send Error:", error);
       alert(error.message);
     } finally {
       setLoading(false);
@@ -42,9 +45,10 @@ export default function Login() {
     try {
       setLoading(true);
       await confirmationResult.confirm(otp);
-      alert("Login successful 🎉");
+      alert("Login Successful 🎉");
       window.location.href = "/";
     } catch (error: any) {
+      console.error("Verify Error:", error);
       alert("Invalid OTP ❌");
     } finally {
       setLoading(false);
@@ -90,6 +94,8 @@ export default function Login() {
           </button>
         </div>
       )}
+
+      {/* ✅ Required element */}
       <div id="recaptcha-container"></div>
     </div>
   );
