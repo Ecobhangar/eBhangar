@@ -1,4 +1,4 @@
-// ✅ Firebase setup for eBhangar — Render-safe mock OTP
+// ✅ eBhangar Firebase mock-safe setup for Render
 import { initializeApp } from "firebase/app";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// ✅ Setup invisible reCAPTCHA (Render-safe)
+// ✅ Always create reCAPTCHA safely
 export const setupRecaptcha = (containerId = "recaptcha-container") => {
   if (!window.recaptchaVerifier) {
     window.recaptchaVerifier = new RecaptchaVerifier(
@@ -26,34 +26,40 @@ export const setupRecaptcha = (containerId = "recaptcha-container") => {
   return window.recaptchaVerifier;
 };
 
-// ✅ Send OTP (mock test flow + Firebase fallback)
+// ✅ Send OTP with guaranteed mock flow
 export const sendOtp = async (phone: string) => {
-  const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
-  const testNumbers = ["+917208360413", "+919226255355"];
+  let formattedPhone = phone.trim();
 
-  // 🔹 Mock OTP for test numbers (no Firebase call)
-  if (testNumbers.includes(formattedPhone)) {
-    console.log("🧪 Mock OTP mode active for", formattedPhone);
+  // ensure +91 is prefixed
+  if (!formattedPhone.startsWith("+91")) {
+    formattedPhone = `+91${formattedPhone}`;
+  }
+
+  const testNumbers = ["+917208360413", "+919226255355", "9226255355", "7208360413"];
+
+  // 🔹 Always use mock OTP for test numbers
+  if (testNumbers.includes(formattedPhone) || testNumbers.includes(phone)) {
+    console.log("🧪 MOCK OTP mode active for:", formattedPhone);
     return {
       verificationId: "MOCK_VERIFICATION_ID",
       confirm: async (otp: string) => {
         if (otp === "123456") {
-          console.log("✅ Mock OTP verified successfully!");
+          console.log("✅ MOCK OTP verified successfully!");
           return { user: { phoneNumber: formattedPhone } };
         }
-        throw new Error("Invalid mock OTP");
+        throw new Error("Invalid test OTP");
       },
     };
   }
 
-  // 🔹 Real OTP flow (Firebase)
+  // 🔹 Real Firebase OTP (for non-test numbers)
   const appVerifier = window.recaptchaVerifier || setupRecaptcha();
   try {
     const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-    console.log("📲 OTP sent to", formattedPhone);
+    console.log("📲 Real OTP sent successfully to", formattedPhone);
     return confirmation;
   } catch (error) {
-    console.error("❌ Firebase OTP error:", error);
+    console.error("❌ Firebase OTP Error:", error);
     throw error;
   }
 };
