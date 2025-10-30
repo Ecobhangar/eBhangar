@@ -1,4 +1,4 @@
-// ✅ Firebase setup for eBhangar (production + test safe)
+// ✅ Firebase setup for eBhangar (Render + Firebase test safe)
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -15,45 +15,55 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// ✅ Initialize Firebase App
+// ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// ✅ Safe check for test mode (only if property exists)
-try {
-  if (auth && "settings" in auth) {
-    // @ts-ignore
-    auth.settings.appVerificationDisabledForTesting = true;
-    console.log("⚙️ Firebase test mode enabled ✅");
-  } else {
-    console.warn("⚠️ Firebase auth.settings not available yet.");
-  }
-} catch (e) {
-  console.warn("⚠️ Skipping appVerificationDisabledForTesting:", e);
-}
-
-// ✅ Create or reuse reCAPTCHA verifier
+// ✅ Setup reCAPTCHA safely (used for OTP)
 export const setupRecaptcha = (containerId = "recaptcha-container") => {
-  if (!window.recaptchaVerifier) {
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      containerId,
-      {
-        size: "invisible",
-        callback: (response: any) => {
-          console.log("✅ reCAPTCHA verified:", response);
+  try {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        containerId,
+        {
+          size: "invisible",
+          callback: (response: any) => {
+            console.log("✅ reCAPTCHA verified:", response);
+          },
         },
-      },
-      auth
-    );
+        auth
+      );
+    }
+    return window.recaptchaVerifier;
+  } catch (error) {
+    console.error("⚠️ reCAPTCHA init failed:", error);
+    throw error;
   }
-  return window.recaptchaVerifier;
 };
 
-// ✅ Send OTP with error handling
+// ✅ Send OTP (with test number bypass)
 export const sendOtp = async (phone: string) => {
   const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
   const appVerifier = window.recaptchaVerifier || setupRecaptcha();
 
+  // 🔹 For Firebase test numbers (no actual OTP send)
+  const testNumbers = ["+917208360413", "+919226255355"];
+  if (testNumbers.includes(formattedPhone)) {
+    console.log("🧪 Firebase test number used, no OTP sent");
+    return {
+      verificationId: "TEST_VERIFICATION_ID",
+      confirm: async (otp: string) => {
+        if (otp === "123456") {
+          console.log("✅ Test OTP verified successfully");
+          return { user: { phoneNumber: formattedPhone } };
+        } else {
+          throw new Error("Invalid test OTP");
+        }
+      },
+    };
+  }
+
+  // 🔹 Real OTP flow
   try {
     const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
     console.log("📩 OTP sent successfully to", formattedPhone);
