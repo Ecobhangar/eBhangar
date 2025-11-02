@@ -4,20 +4,21 @@ import Login from "./pages/Login";
 import CreateBooking from "./pages/create-booking";
 import NotFound from "./pages/not-found";
 
+// ✅ eBhangar App Routing — Stable for Vite + Render
 export default function App() {
   return (
-    <Router>
+    <Router basename="/">
       <Routes>
-        {/* ✅ Default route */}
+        {/* 🏠 Home Page */}
         <Route path="/" element={<Home />} />
 
-        {/* ✅ Login page */}
+        {/* 🔐 Login Page */}
         <Route path="/login" element={<Login />} />
 
-        {/* ✅ Book pickup / create booking */}
+        {/* ♻️ Booking Page */}
         <Route path="/book" element={<CreateBooking />} />
 
-        {/* ✅ Catch-all fallback route */}
+        {/* ❌ Catch-all (404) */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

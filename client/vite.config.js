@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     viteStaticCopy({
-      targets: [{ src: "_redirects", dest: "." }],
+      targets: [{ src: "public/_redirects", dest: "." }],
     }),
   ],
   resolve: {
@@ -24,7 +24,6 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
-    historyApiFallback: true, // ✅ critical for React SPA
   },
   preview: {
     port: 8080,
