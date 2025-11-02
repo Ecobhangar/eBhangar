@@ -1,7 +1,7 @@
+// ✅ client/src/pages/Login.tsx
 import { useState, useEffect } from "react";
-import { setupRecaptcha, sendOtp } from "../lib/firebase";
-import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from "firebase/auth";
+import { auth } from "@/firebase";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -10,15 +10,31 @@ export default function Login() {
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Initialize reCAPTCHA verifier once
   useEffect(() => {
-    setupRecaptcha("recaptcha-container");
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible", // invisible captcha (no popup)
+          callback: () => console.log("reCAPTCHA verified ✅"),
+          "expired-callback": () => alert("reCAPTCHA expired, please try again."),
+        }
+      );
+    }
   }, []);
 
+  // ✅ Send OTP to the entered number
   const handleSendOtp = async () => {
-    if (!phone) return alert("Please enter your mobile number");
+    if (!phone) return alert("⚠️ Please enter your mobile number");
+
+    const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
+
     setLoading(true);
     try {
-      const result = await sendOtp(phone);
+      const appVerifier = window.recaptchaVerifier;
+      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       setConfirmationResult(result);
       setOtpSent(true);
       alert("✅ OTP sent successfully!");
@@ -30,9 +46,10 @@ export default function Login() {
     }
   };
 
+  // ✅ Verify the OTP entered by the user
   const handleVerifyOtp = async () => {
-    if (!otp) return alert("Please enter OTP");
-    if (!confirmationResult) return alert("No OTP session found");
+    if (!otp) return alert("⚠️ Please enter the OTP");
+    if (!confirmationResult) return alert("⚠️ No OTP session found");
 
     setLoading(true);
     try {
@@ -42,6 +59,8 @@ export default function Login() {
       );
       await signInWithCredential(auth, credential);
       alert("✅ Login Successful!");
+      // Optional: redirect to dashboard or profile page
+      window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Verify OTP error:", error);
       alert("❌ Invalid OTP or verification expired.");
@@ -91,7 +110,17 @@ export default function Login() {
           </button>
         </div>
       )}
+
+      {/* ✅ reCAPTCHA container must be present in DOM */}
       <div id="recaptcha-container"></div>
     </div>
   );
+}
+
+// ✅ TypeScript global augmentation
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+    confirmationResult: any;
+  }
 }
