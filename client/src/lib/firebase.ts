@@ -1,8 +1,7 @@
-// client/src/firebase.ts
+// client/src/lib/firebase.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
-// ✅ Your Firebase Config (replace with your own keys)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -13,8 +12,9 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// ✅ Prevent duplicate initialization (Render hot reload / reimports)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// ✅ Initialize only once to prevent duplicate app errors
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
+// ✅ Export Auth instance and helpers
 export const auth = getAuth(app);
 export { RecaptchaVerifier, signInWithPhoneNumber };
