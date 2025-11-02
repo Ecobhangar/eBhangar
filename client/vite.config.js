@@ -6,11 +6,8 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 export default defineConfig({
   plugins: [
     react(),
-    // 🔹 Copy _redirects file into dist/ for Render
     viteStaticCopy({
-      targets: [
-        { src: "_redirects", dest: "." },
-      ],
+      targets: [{ src: "_redirects", dest: "." }],
     }),
   ],
   resolve: {
@@ -21,12 +18,13 @@ export default defineConfig({
   build: {
     outDir: "dist",
     rollupOptions: {
-      input: "index.html",
+      input: path.resolve(__dirname, "index.html"),
     },
   },
   server: {
     port: 5173,
     open: true,
+    historyApiFallback: true, // ✅ critical for React SPA
   },
   preview: {
     port: 8080,
