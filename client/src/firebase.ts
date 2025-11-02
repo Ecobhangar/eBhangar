@@ -1,12 +1,8 @@
-// ✅ client/src/firebase.ts
-import { initializeApp } from "firebase/app";
-import { 
-  getAuth, 
-  RecaptchaVerifier, 
-  signInWithPhoneNumber 
-} from "firebase/auth";
+// client/src/firebase.ts
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
-// ✅ Use Vite environment variables (safer & cleaner)
+// ✅ Your Firebase Config (replace with your own keys)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -17,11 +13,8 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// ✅ Initialize Firebase only once
-const app = initializeApp(firebaseConfig);
+// ✅ Prevent duplicate initialization (Render hot reload / reimports)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// ✅ Initialize Authentication
 export const auth = getAuth(app);
-
-// ✅ Export Firebase Phone Auth helpers
 export { RecaptchaVerifier, signInWithPhoneNumber };
