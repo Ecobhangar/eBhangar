@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { setupRecaptcha, sendOtp } from "../lib/firebase";
+import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
+import { auth } from "../lib/firebase";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -13,43 +15,36 @@ export default function Login() {
   }, []);
 
   const handleSendOtp = async () => {
-    if (!phone) {
-      alert("Please enter your mobile number");
-      return;
-    }
-
+    if (!phone) return alert("Please enter your mobile number");
     setLoading(true);
     try {
       const result = await sendOtp(phone);
       setConfirmationResult(result);
       setOtpSent(true);
-      alert(`✅ OTP sent successfully to ${phone}`);
+      alert("✅ OTP sent successfully!");
     } catch (error: any) {
-      console.error("❌ OTP Send Error:", error);
-      alert("Failed to send OTP. Please try again.");
+      console.error("Send OTP error:", error);
+      alert("❌ Failed to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (!otp) {
-      alert("Please enter OTP");
-      return;
-    }
-
-    if (!confirmationResult) {
-      alert("No OTP session found");
-      return;
-    }
+    if (!otp) return alert("Please enter OTP");
+    if (!confirmationResult) return alert("No OTP session found");
 
     setLoading(true);
     try {
-      // ✅ Mock Verification for Render testing
+      const credential = PhoneAuthProvider.credential(
+        confirmationResult.verificationId,
+        otp
+      );
+      await signInWithCredential(auth, credential);
       alert("✅ Login Successful!");
     } catch (error: any) {
-      console.error("❌ OTP Verify Error:", error);
-      alert("Invalid OTP. Please try again.");
+      console.error("Verify OTP error:", error);
+      alert("❌ Invalid OTP or verification expired.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +59,7 @@ export default function Login() {
           </h2>
           <input
             type="tel"
-            placeholder="+919226255355"
+            placeholder="+919876543210"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="border p-2 rounded-md w-full mb-4"
@@ -96,7 +91,6 @@ export default function Login() {
           </button>
         </div>
       )}
-
       <div id="recaptcha-container"></div>
     </div>
   );
