@@ -1,8 +1,9 @@
-// ✅ eBhangar Firebase — FORCE MOCK OTP MODE (Render-safe testing build)
-import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier } from "firebase/auth";
+// ✅ Firebase setup for eBhangar App (TypeScript + Vite compatible)
 
-// Firebase configuration from environment variables
+import { initializeApp } from "firebase/app";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+
+// ✅ Firebase Config (from .env)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -12,38 +13,46 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+// ✅ Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// ✅ Setup invisible reCAPTCHA safely
-export const setupRecaptcha = (containerId: string = "recaptcha-container") => {
-  if (typeof window !== "undefined" && !window.recaptchaVerifier) {
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      containerId,
-      { size: "invisible" },
-      auth
-    );
+// ✅ Safe reCAPTCHA setup for production
+export const setupRecaptcha = (containerId = "recaptcha-container") => {
+  // Clean up any previous verifier (avoid double init)
+  if (window.recaptchaVerifier) {
+    window.recaptchaVerifier.clear();
   }
+
+  // Create new reCAPTCHA verifier
+  window.recaptchaVerifier = new RecaptchaVerifier(
+    containerId,
+    {
+      size: "invisible",
+      callback: (response: any) => {
+        console.log("✅ reCAPTCHA verified:", response);
+      },
+      "expired-callback": () => {
+        console.warn("⚠️ reCAPTCHA expired, refreshing...");
+      },
+    },
+    auth
+  );
+
   return window.recaptchaVerifier;
 };
 
-// ✅ MOCK OTP MODE — works without Firebase SMS
+// ✅ Send OTP to mobile
 export const sendOtp = async (phone: string) => {
-  console.log("🧪 MOCK OTP MODE ACTIVE — Firebase OTP skipped");
-
   const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
+  const appVerifier = window.recaptchaVerifier || setupRecaptcha();
 
-  // Always return mock verification object
-  return {
-    verificationId: "MOCK_VERIFICATION_ID",
-    confirm: async (otp: string) => {
-      if (otp === "123456") {
-        console.log("✅ Mock OTP verified for", formattedPhone);
-        return { user: { phoneNumber: formattedPhone } };
-      } else {
-        throw new Error("❌ Invalid mock OTP");
-      }
-    },
-  };
+  try {
+    const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+    console.log("✅ OTP sent:", confirmation);
+    return confirmation;
+  } catch (error) {
+    console.error("❌ OTP Send Error:", error);
+    throw error;
+  }
 };
