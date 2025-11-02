@@ -1,7 +1,9 @@
-// ✅ Firebase setup for eBhangar App (TypeScript + Vite compatible)
-
 import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import {
+  getAuth,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+} from "firebase/auth";
 
 // ✅ Firebase Config (from .env)
 const firebaseConfig = {
@@ -17,42 +19,32 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// ✅ Safe reCAPTCHA setup for production
+// ✅ Setup Invisible reCAPTCHA
 export const setupRecaptcha = (containerId = "recaptcha-container") => {
-  // Clean up any previous verifier (avoid double init)
-  if (window.recaptchaVerifier) {
-    window.recaptchaVerifier.clear();
+  if (typeof window === "undefined") return null; // SSR safety
+
+  try {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: "invisible",
+        callback: (response: any) => {
+          console.log("✅ reCAPTCHA verified:", response);
+        },
+      });
+    }
+    return window.recaptchaVerifier;
+  } catch (err) {
+    console.warn("⚠️ reCAPTCHA setup failed (mock mode):", err);
+    return null;
   }
-
-  // Create new reCAPTCHA verifier
-  window.recaptchaVerifier = new RecaptchaVerifier(
-    containerId,
-    {
-      size: "invisible",
-      callback: (response: any) => {
-        console.log("✅ reCAPTCHA verified:", response);
-      },
-      "expired-callback": () => {
-        console.warn("⚠️ reCAPTCHA expired, refreshing...");
-      },
-    },
-    auth
-  );
-
-  return window.recaptchaVerifier;
 };
 
-// ✅ Send OTP to mobile
+// ✅ Send OTP
 export const sendOtp = async (phone: string) => {
   const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
   const appVerifier = window.recaptchaVerifier || setupRecaptcha();
 
-  try {
-    const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-    console.log("✅ OTP sent:", confirmation);
-    return confirmation;
-  } catch (error) {
-    console.error("❌ OTP Send Error:", error);
-    throw error;
-  }
+  if (!appVerifier) throw new Error("Recaptcha not initialized properly.");
+
+  return await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
 };
