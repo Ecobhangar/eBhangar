@@ -1,15 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
-import { useAuth } from "@/context/AuthContext"; // ✅ fixed: context (not contexts)
+import { useAuth } from "@/context/AuthContext"; // ✅ correct folder name
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, Trash2 } from "lucide-react";
@@ -50,19 +55,29 @@ export default function CreateBooking() {
   const [currentCategoryId, setCurrentCategoryId] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("1");
 
-  const { data: userProfile, isLoading: profileLoading } = useQuery<UserProfile>({
-    queryKey: ["/api/users/me"],
-    enabled: !!user,
-  });
+  // ✅ Load profile
+  const { data: userProfile, isLoading: profileLoading } =
+    useQuery<UserProfile>({
+      queryKey: ["/api/users/me"],
+      enabled: !!user,
+    });
 
-  const { data: categories = [], isLoading } = useQuery<CategoryType[]>({
-    queryKey: ["/api/categories"],
-    enabled: !!user,
-  });
+  // ✅ Load categories
+  const { data: categories = [], isLoading: catLoading } =
+    useQuery<CategoryType[]>({
+      queryKey: ["/api/categories"],
+      enabled: !!user,
+    });
+
+  const isLoading = profileLoading || catLoading;
 
   const hasAddress =
-    userProfile?.address && userProfile?.pinCode && userProfile?.district && userProfile?.state;
+    userProfile?.address &&
+    userProfile?.pinCode &&
+    userProfile?.district &&
+    userProfile?.state;
 
+  // ✅ Mutation for create booking
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/bookings", data);
@@ -103,8 +118,8 @@ export default function CreateBooking() {
     const quantity = parseInt(currentQuantity);
     const value = avgRate * quantity;
 
-    setSelectedItems([
-      ...selectedItems,
+    setSelectedItems((prev) => [
+      ...prev,
       {
         categoryId: category.id,
         categoryName: category.name,
@@ -118,9 +133,8 @@ export default function CreateBooking() {
     setCurrentQuantity("1");
   };
 
-  const removeItem = (index: number) => {
-    setSelectedItems(selectedItems.filter((_, i) => i !== index));
-  };
+  const removeItem = (index: number) =>
+    setSelectedItems((prev) => prev.filter((_, i) => i !== index));
 
   const totalValue = selectedItems.reduce((sum, item) => sum + item.value, 0);
 
@@ -128,7 +142,8 @@ export default function CreateBooking() {
     if (!hasAddress) {
       toast({
         title: "Missing Profile Information",
-        description: "Please update your profile with address details first",
+        description:
+          "Please update your profile with address details before creating a booking.",
         variant: "destructive",
       });
       return;
@@ -137,7 +152,7 @@ export default function CreateBooking() {
     if (selectedItems.length === 0) {
       toast({
         title: "No Items Selected",
-        description: "Please add at least one item",
+        description: "Please add at least one item before submitting.",
         variant: "destructive",
       });
       return;
@@ -157,6 +172,7 @@ export default function CreateBooking() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* HEADER */}
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Logo size="small" />
@@ -173,20 +189,20 @@ export default function CreateBooking() {
         </div>
       </header>
 
+      {/* MAIN */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold font-[Poppins] mb-2">
-          Create New Booking
-        </h1>
+        <h1 className="text-3xl font-bold mb-2">Create New Booking</h1>
         <p className="text-muted-foreground mb-8">
           Select scrap items for pickup
         </p>
 
-        {profileLoading || isLoading ? (
+        {isLoading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading...</p>
           </div>
         ) : !hasAddress ? (
+          // 🚫 PROFILE INCOMPLETE
           <Card className="border-destructive/50 bg-destructive/5">
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
@@ -194,8 +210,7 @@ export default function CreateBooking() {
                   Profile Incomplete
                 </h3>
                 <p className="text-muted-foreground">
-                  Please update your profile with address details before
-                  creating a booking.
+                  Please update your profile with address details before creating a booking.
                 </p>
                 <Button
                   onClick={() => setLocation("/profile")}
@@ -207,8 +222,9 @@ export default function CreateBooking() {
             </CardContent>
           </Card>
         ) : (
+          // ✅ BOOKING FORM
           <div className="space-y-8">
-            {/* Pickup Address */}
+            {/* PICKUP ADDRESS */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -217,7 +233,6 @@ export default function CreateBooking() {
                     variant="outline"
                     size="sm"
                     onClick={() => setLocation("/profile")}
-                    data-testid="button-edit-profile"
                   >
                     Edit Profile
                   </Button>
@@ -240,28 +255,26 @@ export default function CreateBooking() {
               </CardContent>
             </Card>
 
-            {/* Items Section */}
+            {/* ITEMS SECTION */}
             <Card>
               <CardHeader>
                 <CardTitle>Select Scrap Items</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Add Item Row */}
-                <div className="flex gap-4 items-end">
+                <div className="flex flex-wrap gap-4 items-end">
                   <div className="flex-1 space-y-2">
                     <Label>Category *</Label>
                     <Select
                       value={currentCategoryId}
                       onValueChange={setCurrentCategoryId}
                     >
-                      <SelectTrigger data-testid="select-category">
+                      <SelectTrigger>
                         <SelectValue placeholder="Select scrap category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name} (₹{category.minRate}-₹
-                            {category.maxRate}/{category.unit})
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name} (₹{c.minRate}-₹{c.maxRate}/{c.unit})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -272,56 +285,45 @@ export default function CreateBooking() {
                     <Label>Quantity *</Label>
                     <Input
                       type="number"
-                      data-testid="input-quantity"
                       min="1"
                       value={currentQuantity}
                       onChange={(e) => setCurrentQuantity(e.target.value)}
-                      placeholder="Qty"
                     />
                   </div>
 
                   <div className="w-48 space-y-2">
                     <Label>Estimated Value</Label>
-                    <div
-                      className="h-10 px-3 py-2 bg-muted rounded-md flex items-center font-semibold text-primary"
-                      data-testid="text-estimated-value"
-                    >
-                      {currentCategoryId && currentQuantity ? (
-                        `₹${(() => {
-                          const cat = categories.find(
-                            (c) => c.id === currentCategoryId
-                          );
-                          if (!cat) return 0;
-                          const avg =
-                            (parseFloat(cat.minRate) +
-                              parseFloat(cat.maxRate)) /
-                            2;
-                          return (avg * parseInt(currentQuantity || "0")).toFixed(
-                            2
-                          );
-                        })()}`
-                      ) : (
-                        "₹0.00"
-                      )}
+                    <div className="h-10 px-3 py-2 bg-muted rounded-md flex items-center font-semibold text-primary">
+                      {currentCategoryId && currentQuantity
+                        ? (() => {
+                            const cat = categories.find(
+                              (c) => c.id === currentCategoryId
+                            );
+                            if (!cat) return "₹0.00";
+                            const avg =
+                              (parseFloat(cat.minRate) +
+                                parseFloat(cat.maxRate)) /
+                              2;
+                            return `₹${(avg * parseInt(currentQuantity)).toFixed(2)}`;
+                          })()
+                        : "₹0.00"}
                     </div>
                   </div>
 
-                  <Button onClick={addItem} data-testid="button-add-item">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add
+                  <Button onClick={addItem}>
+                    <Plus className="w-4 h-4 mr-2" /> Add
                   </Button>
                 </div>
 
-                {/* Items List */}
+                {/* ADDED ITEMS */}
                 {selectedItems.length > 0 && (
-                  <div className="mt-6 space-y-2">
+                  <>
                     <Label>Added Items</Label>
                     <div className="border rounded-md divide-y">
-                      {selectedItems.map((item, index) => (
+                      {selectedItems.map((item, i) => (
                         <div
-                          key={index}
+                          key={i}
                           className="flex items-center justify-between p-3"
-                          data-testid={`item-${index}`}
                         >
                           <div className="flex-1">
                             <p className="font-medium">{item.categoryName}</p>
@@ -336,8 +338,7 @@ export default function CreateBooking() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => removeItem(index)}
-                              data-testid={`button-remove-item-${index}`}
+                              onClick={() => removeItem(i)}
                             >
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
@@ -345,42 +346,31 @@ export default function CreateBooking() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
 
-                {selectedItems.length > 0 && (
-                  <div className="flex justify-between items-center p-4 bg-primary/10 rounded-md">
-                    <p className="text-lg font-semibold">
-                      Total Estimated Value
-                    </p>
-                    <p
-                      className="text-2xl font-bold text-primary"
-                      data-testid="text-total-value"
-                    >
-                      ₹{totalValue.toFixed(2)}
-                    </p>
-                  </div>
+                    {/* TOTAL */}
+                    <div className="flex justify-between items-center p-4 bg-primary/10 rounded-md">
+                      <p className="text-lg font-semibold">
+                        Total Estimated Value
+                      </p>
+                      <p className="text-2xl font-bold text-primary">
+                        ₹{totalValue.toFixed(2)}
+                      </p>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
 
-            {/* Submit Buttons */}
+            {/* BUTTONS */}
             <div className="flex justify-end gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setLocation("/dashboard")}
-                data-testid="button-cancel"
-              >
+              <Button variant="outline" onClick={() => setLocation("/dashboard")}>
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={createBookingMutation.isPending}
-                data-testid="button-submit-booking"
               >
-                {createBookingMutation.isPending
-                  ? "Creating..."
-                  : "Submit Booking"}
+                {createBookingMutation.isPending ? "Creating..." : "Submit Booking"}
               </Button>
             </div>
           </div>
