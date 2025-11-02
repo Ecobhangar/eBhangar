@@ -5,15 +5,13 @@ export default function Login() {
   const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [mockOtp, setMockOtp] = useState("123456"); // fixed OTP for testing
 
-  // ✅ Initialize invisible reCAPTCHA
   useEffect(() => {
     setupRecaptcha("recaptcha-container");
   }, []);
 
-  // ✅ Send OTP (Mock for Render testing)
   const handleSendOtp = async () => {
     if (!phone) {
       alert("Please enter your mobile number");
@@ -22,10 +20,10 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // 🔹 Mock OTP sending – always success
-      await sendOtp(phone);
+      const result = await sendOtp(phone);
+      setConfirmationResult(result);
       setOtpSent(true);
-      alert(`✅ OTP sent successfully to ${phone}\n(Use: ${mockOtp})`);
+      alert(`✅ OTP sent successfully to ${phone}`);
     } catch (error: any) {
       console.error("❌ OTP Send Error:", error);
       alert("Failed to send OTP. Please try again.");
@@ -34,25 +32,24 @@ export default function Login() {
     }
   };
 
-  // ✅ Verify OTP
   const handleVerifyOtp = async () => {
     if (!otp) {
       alert("Please enter OTP");
       return;
     }
 
+    if (!confirmationResult) {
+      alert("No OTP session found");
+      return;
+    }
+
     setLoading(true);
     try {
-      // 🔹 Mock validation
-      if (otp === mockOtp) {
-        alert("✅ Login Successful!");
-        window.location.href = "/"; // redirect to homepage after login
-      } else {
-        throw new Error("Invalid OTP");
-      }
+      // ✅ Mock Verification for Render testing
+      alert("✅ Login Successful!");
     } catch (error: any) {
       console.error("❌ OTP Verify Error:", error);
-      alert("❌ Invalid OTP. Please try again.");
+      alert("Invalid OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -97,15 +94,9 @@ export default function Login() {
           >
             {loading ? "Verifying..." : "Verify OTP"}
           </button>
-          <button
-            onClick={() => setOtpSent(false)}
-            className="text-sm text-blue-600 mt-3"
-          >
-            Resend OTP
-          </button>
         </div>
       )}
-      {/* 🔹 Required invisible reCAPTCHA container */}
+
       <div id="recaptcha-container"></div>
     </div>
   );
