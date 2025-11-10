@@ -1,30 +1,39 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { viteStaticCopy } from "vite-plugin-static-copy"; // ✅ import this plugin
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 export default defineConfig({
   plugins: [
     react(),
     viteStaticCopy({
-      // ✅ ensures _redirects gets copied into the final dist folder
-      targets: [{ src: "_redirects", dest: "." }],
+      targets: [
+        { src: "_redirects", dest: "." } // ✅ copy to dist root
+      ],
     }),
   ],
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
     },
   },
+
   build: {
     outDir: "dist",
   },
+
   server: {
     port: 5173,
     open: true,
-    historyApiFallback: true, // ✅ for React Router in dev mode
   },
+
   preview: {
     port: 8080,
+  },
+
+  // ✅ Required for SPA routing (Render needs this too)
+  optimizeDeps: {
+    include: ["firebase/app", "firebase/auth"],
   },
 });

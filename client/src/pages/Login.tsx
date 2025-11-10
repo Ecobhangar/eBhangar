@@ -1,7 +1,7 @@
-// ✅ client/src/pages/Login.tsx
 import { useState, useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from "firebase/auth";
-import { auth } from "@/firebase";
+import { auth } from "@/lib/firebase"; // ✅ Correct Firebase path
+import { useLocation } from "wouter"; // ✅ SPA navigation
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -9,47 +9,46 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [, setLocation] = useLocation(); // ✅ redirect
 
-  // ✅ Initialize reCAPTCHA verifier once
+  // ✅ Initialize reCAPTCHA once
   useEffect(() => {
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
         auth,
         "recaptcha-container",
         {
-          size: "invisible", // invisible captcha (no popup)
-          callback: () => console.log("reCAPTCHA verified ✅"),
-          "expired-callback": () => alert("reCAPTCHA expired, please try again."),
+          size: "invisible",
+          callback: () => console.log("✅ reCAPTCHA verified"),
+          "expired-callback": () => alert("reCAPTCHA expired. Try again."),
         }
       );
     }
   }, []);
 
-  // ✅ Send OTP to the entered number
   const handleSendOtp = async () => {
-    if (!phone) return alert("⚠️ Please enter your mobile number");
+    if (!phone) return alert("⚠️ Enter mobile number");
 
     const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
-
     setLoading(true);
+
     try {
       const appVerifier = window.recaptchaVerifier;
       const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+
       setConfirmationResult(result);
       setOtpSent(true);
       alert("✅ OTP sent successfully!");
-    } catch (error: any) {
-      console.error("Send OTP error:", error);
-      alert("❌ Failed to send OTP. Please try again.");
+    } catch (error) {
+      console.error(error);
+      alert("❌ OTP sending failed. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Verify the OTP entered by the user
   const handleVerifyOtp = async () => {
-    if (!otp) return alert("⚠️ Please enter the OTP");
-    if (!confirmationResult) return alert("⚠️ No OTP session found");
+    if (!otp) return alert("⚠️ Enter OTP");
 
     setLoading(true);
     try {
@@ -57,13 +56,14 @@ export default function Login() {
         confirmationResult.verificationId,
         otp
       );
+
       await signInWithCredential(auth, credential);
+
       alert("✅ Login Successful!");
-      // Optional: redirect to dashboard or profile page
-      window.location.href = "/dashboard";
-    } catch (error: any) {
-      console.error("Verify OTP error:", error);
-      alert("❌ Invalid OTP or verification expired.");
+      setLocation("/dashboard"); // ✅ Correct redirect for SPA
+    } catch (error) {
+      console.error(error);
+      alert("❌ Invalid OTP. Try again.");
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export default function Login() {
           </h2>
           <input
             type="tel"
-            placeholder="+919876543210"
+            placeholder="9876543210"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="border p-2 rounded-md w-full mb-4"
@@ -93,7 +93,9 @@ export default function Login() {
         </div>
       ) : (
         <div className="bg-white p-8 rounded-2xl shadow-md w-80">
-          <h2 className="text-xl font-semibold mb-4 text-center">Enter OTP</h2>
+          <h2 className="text-xl font-semibold mb-4 text-center">
+            Enter OTP
+          </h2>
           <input
             type="text"
             placeholder="123456"
@@ -111,13 +113,13 @@ export default function Login() {
         </div>
       )}
 
-      {/* ✅ reCAPTCHA container must be present in DOM */}
+      {/* ✅ reCAPTCHA container must exist */}
       <div id="recaptcha-container"></div>
     </div>
   );
 }
 
-// ✅ TypeScript global augmentation
+// ✅ TS global window declarations
 declare global {
   interface Window {
     recaptchaVerifier: any;
