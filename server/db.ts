@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
-import * as schema from "./schema.js"; // Adjust path if your schema file name is different
+import * as schema from "../shared/schema.js"; // ✅ Correct path to your schema file
 
 // ✅ Connect to Neon PostgreSQL
 const sql = neon(process.env.DATABASE_URL!);
