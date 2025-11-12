@@ -19,7 +19,8 @@
     "rimraf": "^5.0.5",
     "@neondatabase/serverless": "^0.9.5",
     "drizzle-orm": "^0.32.2",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
