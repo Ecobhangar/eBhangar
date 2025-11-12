@@ -17,7 +17,9 @@
     "cross-env": "^7.0.3",
     "esbuild": "^0.21.5",
     "rimraf": "^5.0.5",
-    "@neondatabase/serverless": "^0.9.5"
+    "@neondatabase/serverless": "^0.9.5",
+    "drizzle-orm": "^0.32.2",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
