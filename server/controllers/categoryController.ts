@@ -1,7 +1,7 @@
 import express from "express";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neon } from "@neondatabase/serverless";
-import { categories } from "../../shared/schema.js"; // ✅ Correct path to shared/schema.ts
+import { categories } from "../../shared/schema.js"; // ✅ Correct path to schema
 
 const router = express.Router();
 
@@ -9,14 +9,14 @@ const router = express.Router();
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql, { schema: { categories } });
 
-// ✅ /api/categories
+// ✅ /api/categories endpoint
 router.get("/", async (req, res) => {
   try {
-    // 🔹 Example when real DB is connected:
+    // 🔹 Example for real DB (uncomment when your DB table is ready)
     // const allCategories = await db.select().from(categories);
-    // return res.json(allCategories);
+    // return res.status(200).json(allCategories);
 
-    // 🔹 Temporary dummy data for testing frontend
+    // 🔹 Temporary dummy data (used until DB query works)
     const dummyCategories = [
       { id: 1, name: "Plastic" },
       { id: 2, name: "Metal" },
