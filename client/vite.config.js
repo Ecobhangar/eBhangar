@@ -4,15 +4,15 @@ import { resolve } from "path";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 export default defineConfig({
-  base: "/",   // IMPORTANT for Render — ensures correct routing
+  base: "/", // VERY IMPORTANT for Render static routing
 
   plugins: [
     react(),
     viteStaticCopy({
       targets: [
         {
-          src: "public/_redirects",
-          dest: "."
+          src: "public/_redirects", // copy redirects file
+          dest: "."                // put inside dist root
         }
       ]
     })
@@ -27,5 +27,6 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    sourcemap: false,
   },
 });
