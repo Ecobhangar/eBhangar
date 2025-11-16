@@ -1,20 +1,26 @@
 // client/src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
 
+// ❗ Direct static values use karo — Firebase OTP modular env variables break karta hai
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyCLEnHodLazsZn_PLqwIuwvMAndVFZyg",
+  authDomain: "ebhangar-4e9ac.firebaseapp.com",
+  projectId: "ebhangar-4e9ac",
+  storageBucket: "ebhangar-4e9ac.appspot.com",
+  messagingSenderId: "336983550215",
+  appId: "1:336983550215:web:0e51b5b9808bceacd7ba2",
+  measurementId: "G-E3RDNXSHQC"
 };
 
-// ✅ Initialize only once to prevent duplicate app errors
-export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Initialize
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-// ✅ Export Auth instance and helpers
-export const auth = getAuth(app);
-export { RecaptchaVerifier, signInWithPhoneNumber };
+// EXPORTS
+export const auth = firebase.auth();
+export const RecaptchaVerifier = firebase.auth.RecaptchaVerifier;
+export const signInWithPhoneNumber = firebase.auth().signInWithPhoneNumber.bind(firebase.auth());
+
+export default firebase;
