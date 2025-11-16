@@ -8,16 +8,11 @@ export default defineConfig({
 
   plugins: [
     react(),
-
-    // 🔥 THIS ENSURES _redirects GOES TO DIST ROOT 🔥
     viteStaticCopy({
       targets: [
-        {
-          src: "public/_redirects",
-          dest: "./"  // IMPORTANT
-        }
+        { src: "public/_redirects", dest: "." }
       ]
-    }),
+    })
   ],
 
   resolve: {
