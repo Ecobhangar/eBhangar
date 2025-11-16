@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
-import { auth } from "@/lib/firebase";
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-} from "firebase/auth";
+import { auth, createRecaptcha } from "@/lib/firebase";
+import { signInWithPhoneNumber } from "firebase/auth";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -11,35 +8,27 @@ export default function Login() {
   const [otpSent, setOtpSent] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
+  // Initialize reCAPTCHA once
   useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        {
-          size: "invisible",
-        },
-        auth
-      );
-    }
+    createRecaptcha();
   }, []);
 
   const sendOtp = async () => {
     if (!phone) return alert("Enter mobile number");
 
     try {
-      const appVerifier = window.recaptchaVerifier;
+      const fullPhone = phone.startsWith("+") ? phone : `+91${phone}`;
 
-      const fullPhone = phone.startsWith("+")
-        ? phone
-        : `+91${phone}`;
+      // create recaptcha and get verifier
+      const verifier = createRecaptcha();
 
-      const result = await signInWithPhoneNumber(auth, fullPhone, appVerifier);
+      const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
 
       setConfirmationResult(result);
       setOtpSent(true);
       alert("OTP Sent ✔");
     } catch (err) {
-      console.log(err);
+      console.error(err);
       alert("Error sending OTP ❌");
     }
   };
@@ -52,8 +41,9 @@ export default function Login() {
 
       alert("Login Success ✔");
 
-      window.location.href = "/dashboard";
+      window.location.href = "/dashboard"; // redirect after login
     } catch (err) {
+      console.error(err);
       alert("Invalid OTP ❌");
     }
   };
