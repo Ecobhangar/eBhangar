@@ -8,7 +8,9 @@ import {
   signInWithCredential,
 } from "firebase/auth";
 
-// Firebase Config (from .env)
+// -----------------------------
+// Firebase Config From .env
+// -----------------------------
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -19,13 +21,17 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase safely
+// -----------------------------
+// Initialize Firebase (only once)
+// -----------------------------
 export const app =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
+// -----------------------------
+// Export Auth + Firebase Helpers
+// -----------------------------
 export const auth = getAuth(app);
 
-// Export Firebase helpers
 export {
   RecaptchaVerifier,
   signInWithPhoneNumber,
