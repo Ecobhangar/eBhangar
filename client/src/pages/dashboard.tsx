@@ -1,5 +1,6 @@
+// client/src/pages/dashboard.tsx
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { StatCard } from "@/components/StatCard";
@@ -11,33 +12,49 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
-import { Package, CheckCircle, Clock, IndianRupee, Plus, User as UserIcon } from "lucide-react";
+import {
+  Package,
+  CheckCircle,
+  Clock,
+  IndianRupee,
+  Plus,
+  User as UserIcon,
+} from "lucide-react";
+
+type CurrentUserResponse = { role: string };
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<string>("");
   const { user, signOut } = useAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
-  // ✅ Get logged-in user role
-  const { data: currentUser } = useQuery<{ role: string }>({
+  // Logged-in user role
+  const { data: currentUser } = useQuery<CurrentUserResponse>({
     queryKey: ["/api/users/me"],
     enabled: !!user,
+    queryFn: () => apiRequest("GET", "/api/users/me"),
   });
 
-  // ✅ Get all bookings for user
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<any[]>({
+  // All bookings for user
+  const {
+    data: bookings = [],
+    isLoading: bookingsLoading,
+  } = useQuery<any[]>({
     queryKey: ["/api/bookings"],
     enabled: !!user,
+    queryFn: () => apiRequest("GET", "/api/bookings"),
   });
 
-  // ✅ Set correct tab after role loads
+  // Set correct tab after role loads
   useEffect(() => {
-    if (currentUser?.role && !activeTab) setActiveTab(currentUser.role);
-  }, [currentUser?.role]);
+    if (currentUser?.role && !activeTab) {
+      setActiveTab(currentUser.role);
+    }
+  }, [currentUser?.role, activeTab]);
 
   const handleLogout = async () => {
     await signOut();
-    setLocation("/login");
+    navigate("/login", { replace: true });
   };
 
   const totalValue = bookings
@@ -46,7 +63,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-
       {/* Header */}
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -61,7 +77,7 @@ export default function Dashboard() {
 
             <Button
               variant="ghost"
-              onClick={() => setLocation("/profile")}
+              onClick={() => navigate("/profile")}
               className="gap-2"
             >
               <UserIcon className="w-4 h-4" />
@@ -78,7 +94,6 @@ export default function Dashboard() {
       {/* Tabs */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-
           {currentUser?.role === "customer" && (
             <TabsList className="grid w-full max-w-md grid-cols-1">
               <TabsTrigger value="customer">My Dashboard</TabsTrigger>
@@ -88,19 +103,19 @@ export default function Dashboard() {
           {/* Customer Dashboard */}
           {currentUser?.role === "customer" && (
             <TabsContent value="customer" className="space-y-8">
-
               {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-green-600">
                     My Dashboard
                   </h1>
-                  <p className="text-muted-foreground">Track your bookings & earnings</p>
+                  <p className="text-muted-foreground">
+                    Track your bookings & earnings
+                  </p>
                 </div>
 
-                {/* ✅ Correct button */}
                 <Button
-                  onClick={() => setLocation("/book")}
+                  onClick={() => navigate("/book")}
                   className="bg-green-600 hover:bg-green-700 text-white gap-2"
                   size="lg"
                 >
@@ -111,19 +126,31 @@ export default function Dashboard() {
               {/* Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard title="Total Bookings" value={bookings.length} icon={Package} />
-                <StatCard title="Pending" value={bookings.filter(b => b.status === "pending").length} icon={Clock} />
-                <StatCard title="Completed" value={bookings.filter(b => b.status === "completed").length} icon={CheckCircle} />
-                <StatCard title="Scrap Value" value={`₹${totalValue.toFixed(0)}`} icon={IndianRupee} />
+                <StatCard
+                  title="Pending"
+                  value={bookings.filter((b) => b.status === "pending").length}
+                  icon={Clock}
+                />
+                <StatCard
+                  title="Completed"
+                  value={bookings.filter((b) => b.status === "completed").length}
+                  icon={CheckCircle}
+                />
+                <StatCard
+                  title="Scrap Value"
+                  value={`₹${totalValue.toFixed(0)}`}
+                  icon={IndianRupee}
+                />
               </div>
 
-              {/* Bookings */}
+              {/* Bookings list */}
               <div>
                 <h2 className="text-xl font-semibold mb-4">My Bookings</h2>
 
                 {bookingsLoading ? (
                   <p>Loading...</p>
                 ) : bookings.length === 0 ? (
-                  <p>No bookings yet. Click **New Booking**.</p>
+                  <p>No bookings yet. Click “New Booking”.</p>
                 ) : (
                   <div className="grid gap-6">
                     {bookings.map((b) => (
@@ -152,14 +179,13 @@ export default function Dashboard() {
             </TabsContent>
           )}
 
-          {/* Vendor Dashboard Placeholder */}
+          {/* Vendor Dashboard */}
           {currentUser?.role === "vendor" && (
             <TabsContent value="vendor" className="space-y-8">
               <h1 className="text-2xl font-bold">Vendor Dashboard</h1>
               <VendorReviews vendorId="demo" />
             </TabsContent>
           )}
-
         </Tabs>
       </main>
     </div>
