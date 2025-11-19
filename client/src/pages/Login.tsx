@@ -1,133 +1,96 @@
 // client/src/pages/Login.tsx
 import { useState, useEffect } from "react";
-import { auth } from "@/lib/firebase";
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-} from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { auth, RecaptchaVerifier, signInWithPhoneNumber } from "@/lib/firebase";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // ✅ Initialize reCAPTCHA only once – correct order for modular SDK
   useEffect(() => {
-    const win = window as any;
-
-    if (!win.recaptchaVerifier) {
-      win.recaptchaVerifier = new RecaptchaVerifier(
-        auth,                 // <-- auth FIRST
-        "recaptcha-container", // <-- element id
-        {
-          size: "invisible",
-        }
+    if (!(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        { size: "invisible" }
       );
     }
   }, []);
 
   const sendOtp = async () => {
-    if (!phone) {
-      alert("Enter mobile number");
-      return;
-    }
+    if (!phone) return alert("Enter mobile number");
 
     try {
-      setLoading(true);
-
-      const win = window as any;
-      const appVerifier = win.recaptchaVerifier;
-
+      const appVerifier = (window as any).recaptchaVerifier;
       const fullPhone = phone.startsWith("+") ? phone : `+91${phone}`;
-
       const result = await signInWithPhoneNumber(auth, fullPhone, appVerifier);
 
       setConfirmationResult(result);
       setOtpSent(true);
       alert("OTP Sent ✔");
     } catch (err) {
-      console.error("Error sending OTP", err);
+      console.error(err);
       alert("Error sending OTP ❌");
-    } finally {
-      setLoading(false);
     }
   };
 
   const verifyOtp = async () => {
-    if (!otp) {
-      alert("Enter OTP");
-      return;
-    }
-    if (!confirmationResult) {
-      alert("OTP expired, please resend");
-      return;
-    }
+    if (!otp || !confirmationResult) return;
 
     try {
-      setLoading(true);
-
       await confirmationResult.confirm(otp);
 
       alert("Login Success ✔");
-
-      // refresh so AuthContext etc. pick up new user
-      window.location.href = "/dashboard";
+      // ⬇️ yahan sirf /dashboard pe bhejo, /index.html kabhi nahi
+      navigate("/dashboard", { replace: true });
     } catch (err) {
-      console.error("Invalid OTP", err);
+      console.error(err);
       alert("Invalid OTP ❌");
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center">
       <div>
         {!otpSent ? (
-          <div className="p-6 shadow-lg bg-white rounded-lg w-80">
-            <h2 className="text-xl mb-4 font-semibold text-center">Login</h2>
-
+          <div className="p-4 shadow-lg bg-white rounded-lg">
+            <h2 className="text-xl mb-3">Login</h2>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Enter Mobile"
-              className="border p-2 w-full mb-4 rounded"
+              className="border p-2 w-full mb-3"
             />
-
             <button
               onClick={sendOtp}
-              disabled={loading}
-              className="bg-green-600 text-white w-full py-2 rounded-md disabled:opacity-60"
+              className="bg-green-600 text-white w-full py-2 rounded-md"
             >
-              {loading ? "Sending..." : "Send OTP"}
+              Send OTP
             </button>
           </div>
         ) : (
-          <div className="p-6 shadow-lg bg-white rounded-lg w-80">
-            <h2 className="text-xl mb-4 font-semibold text-center">Enter OTP</h2>
-
+          <div className="p-4 shadow-lg bg-white rounded-lg">
+            <h2 className="text-xl mb-3">Enter OTP</h2>
             <input
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="6-digit OTP"
-              className="border p-2 w-full mb-4 rounded"
+              className="border p-2 w-full mb-3"
             />
-
             <button
               onClick={verifyOtp}
-              disabled={loading}
-              className="bg-green-600 text-white w-full py-2 rounded-md disabled:opacity-60"
+              className="bg-green-600 text-white w-full py-2 rounded-md"
             >
-              {loading ? "Verifying..." : "Verify OTP"}
+              Verify OTP
             </button>
           </div>
         )}
 
-        {/* reCAPTCHA container */}
         <div id="recaptcha-container"></div>
       </div>
     </div>
