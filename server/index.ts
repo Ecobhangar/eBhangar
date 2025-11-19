@@ -5,19 +5,23 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import { userRouter } from "./controllers/userController.js";
 import { categoryRouter } from "./controllers/categoryController.js";
-import { db } from "./db.js"; // ✅ Ensure DB connection initializes
+import { db } from "./db.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ✅ CORS setup for frontend (Render + Local)
+/**
+ * ✅ Correct CORS setup
+ * - Your real frontend is https://ebhangar-app.onrender.com
+ * - The old origin ebhangar-fronted.onrender.com was WRONG
+ */
 app.use(
   cors({
     origin: [
-      "https://ebhangar-fronted.onrender.com", // Render frontend
-      "http://localhost:5173" // Local dev frontend
+      "https://ebhangar-app.onrender.com", // correct frontend domain
+      "http://localhost:5173"
     ],
     credentials: true,
   })
@@ -27,27 +31,34 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ API Routes
+/**
+ * ✅ API ROUTES
+ */
 app.use("/api/users", userRouter);
 app.use("/api/categories", categoryRouter);
 
-// ✅ Health check route
+// Health Check
 app.get("/", (req, res) => {
   res.send("✅ eBhangar Backend is Live and Healthy 🚀");
 });
 
-// ✅ 404 fallback
+/**
+ * ❌ WRONG EARLIER: /api/api/* errors were coming
+ * You do NOT need any “/api/*” fallback here.
+ */
+
+// 404 Handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-// ✅ Global error handler (for unexpected issues)
+// Global Error Handler
 app.use((err, req, res, next) => {
   console.error("❌ Server Error:", err);
   res.status(500).json({ message: "Internal Server Error" });
 });
 
-// ✅ Start Server
+// Start Server
 app.listen(PORT, () => {
   console.log("✅ All routes registered successfully");
   console.log(`🚀 Server running on port ${PORT}`);
