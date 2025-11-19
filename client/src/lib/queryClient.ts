@@ -1,18 +1,17 @@
-// ✅ client/src/lib/queryClient.ts
+// ===============================================
+// ✅ client/src/lib/queryClient.ts (FINAL version)
+// ===============================================
+
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { auth } from "./firebase";
 
-/**
- * ✅ API Base URL
- * - In production, it will point to your live Render backend.
- * - In development, you can set VITE_API_URL=http://localhost:5000 in .env
- */
+// ⬇️ Always use backend URL ONLY (Never frontend)
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://ebhangar.onrender.com";
+  import.meta.env.VITE_API_URL || "https://ebhangar.onrender.com/api";
 
-/**
- * ✅ Utility to throw readable errors for failed fetch calls
- */
+// ------------------------------------------------
+// 🔥 Helper: Throw error when API fails
+// ------------------------------------------------
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -20,10 +19,9 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-/**
- * ✅ Automatically attaches Firebase user's phone number header
- * - The backend can identify logged-in users with this header.
- */
+// ------------------------------------------------
+// 🔥 Attach Firebase phone header
+// ------------------------------------------------
 function getAuthHeaders(): HeadersInit {
   const user = auth.currentUser;
   const headers: HeadersInit = {};
@@ -35,9 +33,9 @@ function getAuthHeaders(): HeadersInit {
   return headers;
 }
 
-/**
- * ✅ Generic API request wrapper for GET/POST/PATCH/DELETE
- */
+// ------------------------------------------------
+// 🔥 Main request function for GET/POST/etc
+// ------------------------------------------------
 export async function apiRequest(
   method: string,
   url: string,
@@ -48,43 +46,45 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
 
-  // Ensure URL is absolute
-  const fullUrl = url.startsWith("http")
-    ? url
-    : `${API_BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+  const fullUrl =
+    url.startsWith("http")
+      ? url
+      : `${API_BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 
   const res = await fetch(fullUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include", // IMPORTANT
   });
 
   await throwIfResNotOk(res);
   return res;
 }
 
-/**
- * ✅ Query function helper for react-query hooks
- */
+// ------------------------------------------------
+// 🔥 React Query default fetcher
+// ------------------------------------------------
 type UnauthorizedBehavior = "returnNull" | "throw";
 
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
+  ({ on401 }) =>
   async ({ queryKey }) => {
     const path = queryKey.join("/");
-    const fullUrl = path.startsWith("http")
-      ? path
-      : `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+
+    const fullUrl =
+      path.startsWith("http")
+        ? path
+        : `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 
     const res = await fetch(fullUrl, {
       credentials: "include",
       headers: getAuthHeaders(),
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+    if (on401 === "returnNull" && res.status === 401) {
       return null as T;
     }
 
@@ -92,18 +92,15 @@ export const getQueryFn: <T>(options: {
     return (await res.json()) as T;
   };
 
-/**
- * ✅ Create a global react-query client
- */
+// ------------------------------------------------
+// 🔥 Global React Query client
+// ------------------------------------------------
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: false,
-    },
-    mutations: {
       retry: false,
     },
   },
