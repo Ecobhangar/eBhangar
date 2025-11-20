@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
-import { apiRequest } from "@/lib/queryClient";
+import { apiGetJson } from "@/lib/queryClient";
 import {
   Package,
   CheckCircle,
@@ -28,24 +28,24 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Logged-in user role
+  // ✅ Logged-in user role — /api/users/me (base already /api hai)
   const { data: currentUser } = useQuery<CurrentUserResponse>({
-    queryKey: ["/users/me"],         // FIXED ✔
+    queryKey: ["users/me"],
     enabled: !!user,
-    queryFn: () => apiRequest("GET", "/users/me"), // FIXED ✔
+    queryFn: () => apiGetJson<CurrentUserResponse>("/users/me"),
   });
 
-  // All bookings for user
+  // ✅ User ke sare bookings — /api/bookings
   const {
     data: bookings = [],
     isLoading: bookingsLoading,
   } = useQuery<any[]>({
-    queryKey: ["/bookings"],         // FIXED ✔
+    queryKey: ["bookings"],
     enabled: !!user,
-    queryFn: () => apiRequest("GET", "/bookings"), // FIXED ✔
+    queryFn: () => apiGetJson<any[]>("/bookings"),
   });
 
-  // Set correct tab after role loads
+  // ✅ Tab set karna role ke hisaab se
   useEffect(() => {
     if (currentUser?.role && !activeTab) {
       setActiveTab(currentUser.role);
@@ -93,7 +93,11 @@ export default function Dashboard() {
 
       {/* Tabs */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-8"
+        >
           {currentUser?.role === "customer" && (
             <TabsList className="grid w-full max-w-md grid-cols-1">
               <TabsTrigger value="customer">My Dashboard</TabsTrigger>
@@ -125,7 +129,11 @@ export default function Dashboard() {
 
               {/* Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard title="Total Bookings" value={bookings.length} icon={Package} />
+                <StatCard
+                  title="Total Bookings"
+                  value={bookings.length}
+                  icon={Package}
+                />
                 <StatCard
                   title="Pending"
                   value={bookings.filter((b) => b.status === "pending").length}
@@ -169,7 +177,9 @@ export default function Dashboard() {
                         paymentMode={b.paymentMode}
                         status={b.status}
                         date={new Date(b.createdAt)}
-                        completedAt={b.completedAt ? new Date(b.completedAt) : null}
+                        completedAt={
+                          b.completedAt ? new Date(b.completedAt) : null
+                        }
                         vendorInfo={b.vendor}
                       />
                     ))}
