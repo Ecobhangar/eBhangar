@@ -1,9 +1,12 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+// client/src/lib/queryClient.ts
+import { QueryClient } from "@tanstack/react-query";
 import { auth } from "./firebase";
 
+// CORRECT BASE URL (without /api)
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://ebhangar.onrender.com/api";
+  import.meta.env.VITE_API_URL || "https://ebhangar.onrender.com";
 
+// Throw readable error
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -11,59 +14,43 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Firebase phone header
 function getAuthHeaders(): HeadersInit {
   const user = auth.currentUser;
   const headers: HeadersInit = {};
-
-  if (user?.phoneNumber) {
-    headers["x-user-phone"] = user.phoneNumber;
-  }
-
+  if (user?.phoneNumber) headers["x-user-phone"] = user.phoneNumber;
   return headers;
 }
 
+// Generic fetcher
 export async function apiRequest(method: string, url: string, data?: unknown) {
   const headers: HeadersInit = {
     ...getAuthHeaders(),
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
 
-  const fullUrl = url.startsWith("http")
-    ? url
-    : `${API_BASE_URL}${url}`;
+  // Auto Fix URL
+  const cleanUrl = url.startsWith("/api") ? url : `/api${url}`;
+
+  const fullUrl = `${API_BASE_URL}${cleanUrl}`;
 
   const res = await fetch(fullUrl, {
     method,
     headers,
-    body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
+    body: data ? JSON.stringify(data) : undefined,
   });
 
   await throwIfResNotOk(res);
-  return res;
+  return res.json();
 }
 
-export const getQueryFn =
-  ({ on401 }: { on401: "returnNull" | "throw" }) =>
-  async ({ queryKey }) => {
-    const path = queryKey.join("");
-    const fullUrl = `${API_BASE_URL}${path}`;
-
-    const res = await fetch(fullUrl, {
-      credentials: "include",
-      headers: getAuthHeaders(),
-    });
-
-    if (on401 === "returnNull" && res.status === 401) return null;
-
-    await throwIfResNotOk(res);
-    return res.json();
-  };
-
+// Query client
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: async ({ queryKey }) =>
+        apiRequest("GET", queryKey[0] as string),
       refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 5,
       retry: false,
