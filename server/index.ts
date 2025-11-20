@@ -6,6 +6,9 @@ import bodyParser from "body-parser";
 import { userRouter } from "./controllers/userController.js";
 import { categoryRouter } from "./controllers/categoryController.js";
 import { db } from "./db.js";
+import { bookingRouter } from "./controllers/bookingController.js";
+
+app.use("/api/bookings", bookingRouter);
 
 dotenv.config();
 

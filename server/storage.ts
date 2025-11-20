@@ -1,3 +1,15 @@
+async getAllBookings() {
+  return await this.db.query("SELECT * FROM bookings");
+}
+
+async getBooking(id: string) {
+  const result = await this.db.query(
+    "SELECT * FROM bookings WHERE id = $1",
+    [id]
+  );
+  return result[0];
+}
+
 import { db } from "./db";
 import { 
   users, 
