@@ -1,3 +1,4 @@
+// server/storage.ts
 import { db } from "./db";
 import {
   users,
@@ -25,15 +26,13 @@ import {
   type Settings,
   type InsertSettings,
 } from "@shared/schema";
+
 import { eq, desc, avg, like } from "drizzle-orm";
 
-/**
- * ===========================================
- * STORAGE CLASS
- * ===========================================
- */
 export class DbStorage {
-  /* ---------------------- USERS ---------------------- */
+  /* ---------------------------------------------------
+     USERS
+  ------------------------------------------------------ */
 
   async getUser(id: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id));
@@ -64,7 +63,9 @@ export class DbStorage {
     return result[0];
   }
 
-  /* ---------------------- CATEGORIES ---------------------- */
+  /* ---------------------------------------------------
+     CATEGORIES
+  ------------------------------------------------------ */
 
   async getAllCategories(): Promise<Category[]> {
     return await db.select().from(categories);
@@ -80,7 +81,9 @@ export class DbStorage {
     return result[0];
   }
 
-  /* ---------------------- VENDORS ---------------------- */
+  /* ---------------------------------------------------
+     VENDORS
+  ------------------------------------------------------ */
 
   async getAllVendors(): Promise<(Vendor & { user: User })[]> {
     const result = await db
@@ -88,9 +91,9 @@ export class DbStorage {
       .from(vendors)
       .leftJoin(users, eq(vendors.userId, users.id));
 
-    return result.map((row: any) => ({
-      ...row.vendors,
-      user: row.users!,
+    return result.map((r: any) => ({
+      ...r.vendors,
+      user: r.users!,
     }));
   }
 
@@ -119,48 +122,15 @@ export class DbStorage {
     return result[0];
   }
 
-  /* ---------------------- BOOKINGS ---------------------- */
+  /* ---------------------------------------------------
+     BOOKINGS
+  ------------------------------------------------------ */
 
   async getAllBookings(): Promise<
     (Booking & { items: BookingItem[]; vendor?: { name: string; phone: string } })[]
   > {
-    const allBookings = await db
-      .select()
-      .from(bookings)
-      .orderBy(desc(bookings.createdAt));
-
-    const bookingsWithItems = await Promise.all(
-      allBookings.map(async (booking: Booking) => {
-        const items = await db
-          .select()
-          .from(bookingItems)
-          .where(eq(bookingItems.bookingId, booking.id));
-
-        let vendor = undefined;
-
-        if (booking.vendorId) {
-          const vendorResult = await db
-            .select({
-              name: users.name,
-              phone: users.phoneNumber,
-            })
-            .from(vendors)
-            .leftJoin(users, eq(vendors.userId, users.id))
-            .where(eq(vendors.id, booking.vendorId));
-
-          if (vendorResult.length > 0 && vendorResult[0].phone) {
-            vendor = {
-              name: vendorResult[0].name || vendorResult[0].phone,
-              phone: vendorResult[0].phone,
-            };
-          }
-        }
-
-        return { ...booking, items, vendor };
-      })
-    );
-
-    return bookingsWithItems;
+    const all = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
+    return this.attachItemsAndVendor(all);
   }
 
   async getBookingsByCustomer(customerId: string) {
@@ -184,25 +154,29 @@ export class DbStorage {
   }
 
   async getBooking(id: string) {
-    const result = await db.select().from(bookings).where(eq(bookings.id, id));
-    if (result.length === 0) return undefined;
+    const rows = await db.select().from(bookings).where(eq(bookings.id, id));
+    if (rows.length === 0) return undefined;
 
     const items = await db.select().from(bookingItems).where(eq(bookingItems.bookingId, id));
-    return { ...result[0], items };
+    return { ...rows[0], items };
   }
 
   async createBooking(booking: InsertBooking, items: InsertBookingItem[]): Promise<Booking> {
     const referenceId = await this.generateBookingReferenceId();
-    const result = await db.insert(bookings).values({ ...booking, referenceId }).returning();
-    const createdBooking = result[0];
+    const result = await db
+      .insert(bookings)
+      .values({ ...booking, referenceId })
+      .returning();
+
+    const created = result[0];
 
     if (items.length > 0) {
       await db.insert(bookingItems).values(
-        items.map((i) => ({ ...i, bookingId: createdBooking.id }))
+        items.map((i) => ({ ...i, bookingId: created.id }))
       );
     }
 
-    return createdBooking;
+    return created;
   }
 
   async assignVendor(bookingId: string, vendorId: string) {
@@ -211,6 +185,7 @@ export class DbStorage {
       .set({ vendorId })
       .where(eq(bookings.id, bookingId))
       .returning();
+
     return result[0];
   }
 
@@ -220,20 +195,22 @@ export class DbStorage {
       .set({ vendorId: null, status: "pending" })
       .where(eq(bookings.id, bookingId))
       .returning();
+
     return result[0];
   }
 
   async updateBookingStatus(bookingId: string, status: string, paymentMode?: string) {
-    const updateData: any = { status };
+    const updates: any = { status };
 
-    if (status === "completed") updateData.completedAt = new Date();
-    if (paymentMode) updateData.paymentMode = paymentMode;
+    if (status === "completed") updates.completedAt = new Date();
+    if (paymentMode) updates.paymentMode = paymentMode;
 
     const result = await db
       .update(bookings)
-      .set(updateData)
+      .set(updates)
       .where(eq(bookings.id, bookingId))
       .returning();
+
     return result[0];
   }
 
@@ -243,6 +220,7 @@ export class DbStorage {
       .set({ paymentStatus })
       .where(eq(bookings.id, bookingId))
       .returning();
+
     return result[0];
   }
 
@@ -251,7 +229,9 @@ export class DbStorage {
     await db.delete(bookings).where(eq(bookings.id, bookingId));
   }
 
-  /* ---------------------- REVIEWS ---------------------- */
+  /* ---------------------------------------------------
+     REVIEWS
+  ------------------------------------------------------ */
 
   async createReview(review: InsertReview): Promise<Review> {
     const result = await db.insert(reviews).values(review).returning();
@@ -272,7 +252,9 @@ export class DbStorage {
     }));
   }
 
-  /* ---------------------- INVOICES ---------------------- */
+  /* ---------------------------------------------------
+     INVOICES
+  ------------------------------------------------------ */
 
   async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
     const result = await db.insert(invoices).values(invoice).returning();
@@ -284,7 +266,9 @@ export class DbStorage {
     return result[0];
   }
 
-  /* ---------------------- SETTINGS ---------------------- */
+  /* ---------------------------------------------------
+     SETTINGS
+  ------------------------------------------------------ */
 
   async getSetting(key: string) {
     const result = await db.select().from(settings).where(eq(settings.key, key));
@@ -300,10 +284,13 @@ export class DbStorage {
         set: { value, updatedAt: new Date() },
       })
       .returning();
+
     return result[0];
   }
 
-  /* ---------------------- UTILS ---------------------- */
+  /* ---------------------------------------------------
+     INTERNAL HELPERS
+  ------------------------------------------------------ */
 
   private async attachItemsAndVendor(list: Booking[]) {
     return Promise.all(
@@ -316,7 +303,7 @@ export class DbStorage {
         let vendor = undefined;
 
         if (booking.vendorId) {
-          const vendorResult = await db
+          const vendorData = await db
             .select({
               name: users.name,
               phone: users.phoneNumber,
@@ -325,10 +312,10 @@ export class DbStorage {
             .leftJoin(users, eq(vendors.userId, users.id))
             .where(eq(vendors.id, booking.vendorId));
 
-          if (vendorResult.length > 0 && vendorResult[0].phone) {
+          if (vendorData.length > 0) {
             vendor = {
-              name: vendorResult[0].name || vendorResult[0].phone,
-              phone: vendorResult[0].phone,
+              name: vendorData[0].name || vendorData[0].phone,
+              phone: vendorData[0].phone,
             };
           }
         }
@@ -338,7 +325,7 @@ export class DbStorage {
     );
   }
 
-  async generateBookingReferenceId() {
+  async generateBookingReferenceId(): Promise<string> {
     const result = await db
       .select({ referenceId: bookings.referenceId })
       .from(bookings)
