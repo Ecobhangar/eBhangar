@@ -30,9 +30,9 @@ export default function Dashboard() {
 
   // Logged-in user role
   const { data: currentUser } = useQuery<CurrentUserResponse>({
-    queryKey: ["/api/users/me"],
+    queryKey: ["/users/me"],         // FIXED ✔
     enabled: !!user,
-    queryFn: () => apiRequest("GET", "/api/users/me"),
+    queryFn: () => apiRequest("GET", "/users/me"), // FIXED ✔
   });
 
   // All bookings for user
@@ -40,9 +40,9 @@ export default function Dashboard() {
     data: bookings = [],
     isLoading: bookingsLoading,
   } = useQuery<any[]>({
-    queryKey: ["/api/bookings"],
+    queryKey: ["/bookings"],         // FIXED ✔
     enabled: !!user,
-    queryFn: () => apiRequest("GET", "/api/bookings"),
+    queryFn: () => apiRequest("GET", "/bookings"), // FIXED ✔
   });
 
   // Set correct tab after role loads
